@@ -1,5 +1,8 @@
 package com.example.aleksa.androgen.data;
 
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.net.Uri;
 import android.provider.BaseColumns;
 
 /*
@@ -10,10 +13,36 @@ import android.provider.BaseColumns;
 public class PolenContract {
 
 
+    // Content authority for the polen provider
+    public static final String CONTENT_AUTHORITY = "com.example.aleksa.androgen";
+
+    // The base URI for accessing content of the databases
+    public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
+
+    // The paths appended to the base content uri in order to access the desired table
+    public static final String PATH_PLANT = "plant";
+    public static final String PATH_POLEN = "polen";
+    public static final String PATH_LOCATION = "location";
+
+    // TODO standardize date somehow
+    public static long standardizeDate(long date) {
+        return date;
+    }
+
     /*
         Polen measurements table, contains: plant and location IDs, date, concentration and tendency
      */
     public static final class PolenEntry implements BaseColumns {
+
+        // Content URI base for polen table
+        public static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_POLEN).build();
+
+        // Strings marking whether the action returns single or multiple entries
+        public static final String CONTENT_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_POLEN;
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_POLEN;
 
         // Table name
         public static final String TABLE_NAME = "polen";
@@ -33,6 +62,26 @@ public class PolenContract {
         // Tendency of plant's polen concentration
         public static final String COLUMN_TENDENCY = "tendency";
 
+
+        // Returns URI referencing polen entry with the given id
+        public static Uri buildPolenUri(long id){
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
+        // Returns URI referencing polen entry with the given location and date
+        public static Uri buildPolenLocationWithDate(String location, long date){
+            long standardDate = standardizeDate(date);
+            return CONTENT_URI.buildUpon().appendPath(location).
+                    appendPath(Long.toString(standardDate)).build();
+        }
+
+        // Returns URI referencing polen entry with the given location, date, and plant
+        public static Uri buildPolenLocationWithDateAndPlant(String location, long date, String plant){
+            long standardDate = standardizeDate(date);
+            return CONTENT_URI.buildUpon().appendPath(location).
+                    appendPath(Long.toString(standardDate)).appendPath(plant).build();
+        }
+
     }
 
 
@@ -40,6 +89,16 @@ public class PolenContract {
         Locations table, containing basic location info
      */
     public static final class LocationEntry implements BaseColumns{
+
+        // Content URI base for locations table
+        public static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_LOCATION).build();
+
+        // Strings marking whether the action returns single or multiple entries
+        public static final String CONTENT_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_LOCATION;
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_LOCATION;
 
         // Table name
         public static final String TABLE_NAME = "location";
@@ -51,6 +110,10 @@ public class PolenContract {
         public static final String COLUMN_LATITUDE = "latitude";
         public static final String COLUMN_LONGITUDE = "longitude";
 
+        // Returns URI referencing location entry with the given id
+        public static Uri buildLocationUri(long id){
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
     }
 
 
@@ -59,12 +122,27 @@ public class PolenContract {
      */
     public static final class PlantEntry implements BaseColumns{
 
+        // Content URI base for plants table
+        public static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_PLANT).build();
+
+        // Strings marking whether the action returns single or multiple entries
+        public static final String CONTENT_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_PLANT;
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_PLANT;
+
         // Table name
         public static final String TABLE_NAME = "plant";
 
         // Plant name in latin
         public static final String COLUMN_NAME = "name";
 
+
+        // Returns URI referencing plant entry with the given id
+        public static Uri buildPlantUri(long id){
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
     }
 
 }

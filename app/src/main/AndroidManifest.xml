@@ -27,6 +27,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.aleksa.androgen.MainActivity" />
         </activity>
+        <provider
+            android:authorities="com.example.aleksa.androgen"
+            android:name=".data.PolenProvider"
+            />
     </application>
 
 </manifest>
