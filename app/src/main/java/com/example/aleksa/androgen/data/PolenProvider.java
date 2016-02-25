@@ -82,6 +82,7 @@ public class PolenProvider extends ContentProvider {
         return matcher;
     }
 
+    // Get the rows with the given location, date and plant which are determined from uri
     private Cursor getPolenLocationDatePlant(Uri uri, String[] projection, String sortOrder) {
         // TODO fix these to be read from the uri
         String location = null;
@@ -96,6 +97,7 @@ public class PolenProvider extends ContentProvider {
                 sortOrder);
     }
 
+    // Get the rows with the given location and date which are determined from uri
     private Cursor getPolenLocationDate(Uri uri, String[] projection, String sortOrder) {
         // TODO fix these to implement methods that read the values from the uri
         String location = null;
@@ -110,9 +112,18 @@ public class PolenProvider extends ContentProvider {
         );
     }
 
+    // Get the rows with the given location which is determined from uri
     private Cursor getPolenLocation(Uri uri, String[] projection, String sortOrder) {
         // TODO
-        return null;
+        String location = null;
+
+        return sPolenByLocationAndPlant.query(mOpenHelper.getReadableDatabase(),
+                projection,
+                sLocationDateSelection,
+                new String[]{location},
+                null, null,
+                sortOrder
+        );
     }
 
     @Override
