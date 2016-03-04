@@ -1,5 +1,6 @@
 package com.example.aleksa.androgen;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -13,9 +14,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Create an adapter for our viewpager and attach it
         ViewPager pager = (ViewPager) findViewById(R.id.main_pager);
-        SlidingAdapter adapter = new SlidingAdapter(getSupportFragmentManager());
+        SlidingAdapter adapter = new SlidingAdapter(getSupportFragmentManager(), this);
         pager.setAdapter(adapter);
+
+        // Get a handle to the shared preferences containing info about checked plants
+        SharedPreferences sharedPref = getSharedPreferences(
+                getString(R.string.shared_pref_plants), MODE_PRIVATE);
     }
 
     @Override

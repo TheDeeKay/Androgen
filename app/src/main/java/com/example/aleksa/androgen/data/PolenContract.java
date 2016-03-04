@@ -106,6 +106,9 @@ public class PolenContract {
         // Location name
         public static final String COLUMN_NAME = "name";
 
+        // Location id
+        public static final String COLUMN_LOCATION_ID = "id";
+
         // Location's latitude and longitude
         public static final String COLUMN_LATITUDE = "latitude";
         public static final String COLUMN_LONGITUDE = "longitude";
@@ -135,14 +138,31 @@ public class PolenContract {
         // Table name
         public static final String TABLE_NAME = "plant";
 
-        // Plant name in latin
+        // Plant name in Serbian
         public static final String COLUMN_NAME = "name";
 
+        // Plant ID
+        public static final String COLUMN_PLANT_ID = "id";
 
         // Returns URI referencing plant entry with the given id
         public static Uri buildPlantUri(long id){
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
+    }
+
+    // Takes a uri and extracts location info from it
+    public static String getLocationFromUri(Uri uri){
+        return uri.getPathSegments().get(1);
+    }
+
+    // Takes a uri and extracts date from it, then standardizes it
+    public static long getDateFromUri(Uri uri){
+        return standardizeDate(Long.parseLong(uri.getPathSegments().get(2)));
+    }
+
+    // Takes a uri and extracts plant id from it
+    public static int getPlantFromUri(Uri uri){
+        return Integer.parseInt(uri.getPathSegments().get(3));
     }
 
 }

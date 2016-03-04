@@ -24,7 +24,9 @@ public class PolenProvider extends ContentProvider {
     private static final int POLEN_WITH_LOCATION_DATE = 102;
     private static final int POLEN_WITH_LOCATION_DATE_PLANT = 103;
     private static final int LOCATION = 200;
+    private static final int LOCATION_WITH_ID = 201;
     private static final int PLANT = 300;
+    private static final int PLANT_WITH_ID = 301;
 
     // This is a query builder for the three tables joined together
     private static final SQLiteQueryBuilder sPolenByLocationAndPlant;
@@ -35,10 +37,10 @@ public class PolenProvider extends ContentProvider {
         sPolenByLocationAndPlant.setTables(
                 PolenEntry.TABLE_NAME + "INNER JOIN" + LocationEntry.TABLE_NAME
                         + " ON " + PolenEntry.TABLE_NAME + "." + PolenEntry.COLUMN_LOCATION_ID + " = "
-                        + LocationEntry.TABLE_NAME + "." + LocationEntry._ID
+                        + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_LOCATION_ID
                         + " INNER JOIN" + PlantEntry.TABLE_NAME
                         + " ON " + PolenEntry.TABLE_NAME + "." + PolenEntry.COLUMN_PLANT_ID + " = "
-                        + PlantEntry.TABLE_NAME + "." + PlantEntry._ID
+                        + PlantEntry.TABLE_NAME + "." + PlantEntry.COLUMN_PLANT_ID
         );
     }
 
@@ -76,18 +78,23 @@ public class PolenProvider extends ContentProvider {
         matcher.addURI(authority, PolenContract.PATH_POLEN + "/*", POLEN_WITH_LOCATION);
         matcher.addURI(authority, PolenContract.PATH_POLEN + "/*/#", POLEN_WITH_LOCATION_DATE);
         matcher.addURI(authority, PolenContract.PATH_POLEN + "/*/#/*", POLEN_WITH_LOCATION_DATE_PLANT);
+
         matcher.addURI(authority, PolenContract.PATH_LOCATION, LOCATION);
+        matcher.addURI(authority, PolenContract.PATH_LOCATION + "/*", LOCATION_WITH_ID);
+
         matcher.addURI(authority, PolenContract.PATH_PLANT, PLANT);
+        matcher.addURI(authority, PolenContract.PATH_PLANT + "/*", PLANT_WITH_ID);
 
         return matcher;
     }
 
     // Get the rows with the given location, date and plant which are determined from uri
     private Cursor getPolenLocationDatePlant(Uri uri, String[] projection, String sortOrder) {
-        // TODO fix these to be read from the uri
-        String location = null;
-        String plant = null;
-        long date = 0;
+
+        // Extract the details from uri
+        String location = PolenContract.getLocationFromUri(uri);
+        String plant = String.valueOf(PolenContract.getPlantFromUri(uri));
+        long date = PolenContract.getDateFromUri(uri);
 
         return sPolenByLocationAndPlant.query(mOpenHelper.getReadableDatabase(),
                 projection,
@@ -99,9 +106,10 @@ public class PolenProvider extends ContentProvider {
 
     // Get the rows with the given location and date which are determined from uri
     private Cursor getPolenLocationDate(Uri uri, String[] projection, String sortOrder) {
-        // TODO fix these to implement methods that read the values from the uri
-        String location = null;
-        long date = 0;
+
+        // Extract details from uri
+        String location = PolenContract.getLocationFromUri(uri);
+        long date = PolenContract.getDateFromUri(uri);
 
         return sPolenByLocationAndPlant.query(mOpenHelper.getReadableDatabase(),
                 projection,
@@ -114,8 +122,9 @@ public class PolenProvider extends ContentProvider {
 
     // Get the rows with the given location which is determined from uri
     private Cursor getPolenLocation(Uri uri, String[] projection, String sortOrder) {
-        // TODO
-        String location = null;
+
+        // Extract location from uri
+        String location = PolenContract.getLocationFromUri(uri);
 
         return sPolenByLocationAndPlant.query(mOpenHelper.getReadableDatabase(),
                 projection,
@@ -169,6 +178,23 @@ public class PolenProvider extends ContentProvider {
                 break;
             }
 
+            // location/*
+            case LOCATION_WITH_ID: {
+
+                // Extract the location id
+                String id = uri.getPathSegments().get(1);
+
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        LocationEntry.TABLE_NAME,
+                        projection,
+                        LocationEntry.TABLE_NAME +"." + LocationEntry.COLUMN_LOCATION_ID + " = ? ",
+                        new String[]{id},
+                        null, null,
+                        null
+                );
+                break;
+            }
+
             // location/
             case LOCATION: {
                 retCursor = mOpenHelper.getReadableDatabase().query(
@@ -176,6 +202,22 @@ public class PolenProvider extends ContentProvider {
                         projection,
                         selection,
                         selectionArgs,
+                        null, null,
+                        sortOrder
+                );
+                break;
+            }
+
+            case PLANT_WITH_ID: {
+
+                // Extract the plant id
+                String id = uri.getPathSegments().get(1);
+
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        PlantEntry.TABLE_NAME,
+                        projection,
+                        PlantEntry.TABLE_NAME + "." + PlantEntry.COLUMN_PLANT_ID + " = ? ",
+                        new String[]{id},
                         null, null,
                         sortOrder
                 );
@@ -224,8 +266,14 @@ public class PolenProvider extends ContentProvider {
             case POLEN_WITH_LOCATION_DATE_PLANT:
                 return PolenEntry.CONTENT_ITEM_TYPE;
 
+            case LOCATION_WITH_ID:
+                return LocationEntry.CONTENT_ITEM_TYPE;
+
             case LOCATION:
                 return LocationEntry.CONTENT_TYPE;
+
+            case PLANT_WITH_ID:
+                return LocationEntry.CONTENT_ITEM_TYPE;
 
             case PLANT:
                 return PlantEntry.CONTENT_TYPE;

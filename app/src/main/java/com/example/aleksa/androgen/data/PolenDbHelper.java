@@ -16,7 +16,7 @@ public class PolenDbHelper extends SQLiteOpenHelper {
     // Must manually increase this each time database schema is changed
     private static final int DATABASE_VERSION = 1;
 
-    static final String DATABASE_NAME = "polen.db";
+    public static final String DATABASE_NAME = "polen.db";
 
     public PolenDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -28,7 +28,7 @@ public class PolenDbHelper extends SQLiteOpenHelper {
 
         // The CREATE statement for the locations table
         final String SQL_CREATE_LOCATION_TABLE = "CREATE TABLE " + LocationEntry.TABLE_NAME +
-                " (" + LocationEntry._ID + " INTEGER PRIMARY KEY, " +
+                " (" + LocationEntry.COLUMN_LOCATION_ID + " INTEGER PRIMARY KEY, " +
                 LocationEntry.COLUMN_NAME + " TEXT NOT NULL, " +
                 LocationEntry.COLUMN_LATITUDE + " REAL NOT NULL, " +
                 LocationEntry.COLUMN_LONGITUDE + " REAL NOT NULL" +
@@ -36,7 +36,7 @@ public class PolenDbHelper extends SQLiteOpenHelper {
 
         // The CREATE statement for the plants table
         final String SQL_CREATE_PLANT_TABLE = "CREATE TABLE " + PlantEntry.TABLE_NAME +
-                " (" + PlantEntry._ID + " INTEGER PRIMARY KEY, " +
+                " (" + PlantEntry.COLUMN_PLANT_ID + " INTEGER PRIMARY KEY, " +
                 PlantEntry.COLUMN_NAME + " TEXT NOT NULL" +
                 " );";
 
