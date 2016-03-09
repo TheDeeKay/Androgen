@@ -16,6 +16,7 @@ public class FragmentMain extends Fragment {
 
     public static final String PLANT_ID = "plant_id";
 
+    // Holds the current selected location
     private String mLocation;
 
     /*
@@ -30,8 +31,6 @@ public class FragmentMain extends Fragment {
 
     }
 
-    // holds the ID of the plant displayed within the fragment
-    public int displayedPlantID;
 
     public FragmentMain() {
         // Required empty public constructor
@@ -81,6 +80,8 @@ public class FragmentMain extends Fragment {
 
             // If there is a plant with such ID, set the text views to display its info
             if (plant.moveToFirst()) {
+
+
 
                 String plantName = plant.getString(plant.getColumnIndex(PlantEntry.COLUMN_NAME));
                 holder.plantName.setText(plant.getString(plant.getColumnIndex(PlantEntry.COLUMN_NAME)));

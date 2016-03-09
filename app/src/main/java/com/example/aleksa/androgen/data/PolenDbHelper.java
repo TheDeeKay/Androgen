@@ -37,7 +37,8 @@ public class PolenDbHelper extends SQLiteOpenHelper {
         // The CREATE statement for the plants table
         final String SQL_CREATE_PLANT_TABLE = "CREATE TABLE " + PlantEntry.TABLE_NAME +
                 " (" + PlantEntry.COLUMN_PLANT_ID + " INTEGER PRIMARY KEY, " +
-                PlantEntry.COLUMN_NAME + " TEXT NOT NULL" +
+                PlantEntry.COLUMN_NAME + " TEXT NOT NULL, " +
+                PlantEntry.COLUMN_PLANT_ALLERGENIC_INDEX + " INTEGER NOT NULL" +
                 " );";
 
         // The CREATE statement for the polen table

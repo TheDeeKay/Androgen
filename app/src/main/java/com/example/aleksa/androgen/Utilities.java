@@ -36,6 +36,7 @@ public class Utilities {
         // Get a handle to the shared preferences containing info about plant selections
         // The values are stored as (String plantId, int selected)
         // selected values are 0 and 1 (0 for selected, 1 for unselected)
+        // It also holds the information for the selected location
         SharedPreferences sharedPref = context.getSharedPreferences(
                 context.getString(R.string.shared_pref_plants), context.MODE_PRIVATE
         );
@@ -69,6 +70,10 @@ public class Utilities {
             return -1;
 
         int i;
+
+        // Get shared preferences for the selected plants
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                context.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
 
         for (i = 0; (i < totalPlantsNumber) && (position > -1); i++)
             if (plantSelected(i, context)) --position;

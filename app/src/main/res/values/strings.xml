@@ -6,4 +6,6 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_main2">Main2Activity</string>
     <string name="shared_pref_plants">com.example.aleksa.androgen.shared_pref_plants</string>
+    <string name="data.sepa.gov">http://data.sepa.gov.rs/api/action/datastore/search.json?</string>
+    <string name="polen_json_id">d291f9c7-b1a4-4c97-9618-c545a22fb23d</string>
 </resources>

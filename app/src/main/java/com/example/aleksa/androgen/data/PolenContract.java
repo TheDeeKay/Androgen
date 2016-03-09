@@ -144,6 +144,9 @@ public class PolenContract {
         // Plant ID
         public static final String COLUMN_PLANT_ID = "id";
 
+        // Plant allergenic potency
+        public static final String COLUMN_PLANT_ALLERGENIC_INDEX = "allergen";
+
         // Returns URI referencing plant entry with the given id
         public static Uri buildPlantUri(long id){
             return ContentUris.withAppendedId(CONTENT_URI, id);
