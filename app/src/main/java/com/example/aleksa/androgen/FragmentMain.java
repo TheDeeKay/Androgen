@@ -66,53 +66,62 @@ public class FragmentMain extends Fragment {
         holder.percentageText = (TextView) rootView.findViewById(R.id.percentage_text);
 
         if (this.getArguments() != null) {
+            // Set the view contents using the arguments given
+            setViewContents(this.getArguments(), holder);
+        }
 
-            // Get a URI that matches the plant with our ID
-            Uri plantIdUri = PlantEntry.buildPlantUri(this.getArguments().getInt(PLANT_ID));
+        return rootView;
+    }
 
-            // Cursor containing the query results for plant table, should be a single plant with our ID
-            Cursor plant = getContext().getContentResolver().query(
-                    plantIdUri,
+    /*
+    Called to set the view contents to appropriate values when instantiating the fragment
+     */
+    private void setViewContents(Bundle arguments, ViewHolder holder){
+
+        // Get a URI that matches the plant with our ID
+        Uri plantIdUri = PlantEntry.buildPlantUri(arguments.getInt(PLANT_ID));
+
+        // Cursor containing the query results for plant table, should be a single plant with our ID
+        Cursor plant = getContext().getContentResolver().query(
+                plantIdUri,
+                null,
+                null,
+                null,
+                null);
+
+        // If there is a plant with such ID, set the text views to display its info
+        if (plant.moveToFirst()) {
+
+            holder.plantName.setText(plant.getString(plant.getColumnIndex(PlantEntry.COLUMN_NAME)));
+
+            int plantId = plant.getInt(plant.getColumnIndex(PlantEntry.COLUMN_PLANT_ID));
+
+            // Get a URI that matches the pollen entry with this plant ID, for this location and date
+            Uri pollenUri = PolenContract.PolenEntry.buildPolenLocationWithDateAndPlant(
+                    mLocation,
+                    System.currentTimeMillis(),
+                    String.valueOf(plantId)
+            );
+
+            // A cursor containing the entry for the given date, plant and location
+            Cursor pollen = getContext().getContentResolver().query(
+                    pollenUri,
                     null,
                     null,
                     null,
                     null);
 
-            // If there is a plant with such ID, set the text views to display its info
-            if (plant.moveToFirst()) {
+            if (pollen.moveToFirst())
+                holder.statusText.setText(pollen.getInt(
+                        pollen.getColumnIndex(PolenContract.PolenEntry.COLUMN_CONCENTRATION)
+                ));
 
-                holder.plantName.setText(plant.getString(plant.getColumnIndex(PlantEntry.COLUMN_NAME)));
-
-                int plantId = plant.getInt(plant.getColumnIndex(PlantEntry.COLUMN_PLANT_ID));
-
-                // Get a URI that matches the pollen entry with this plant ID, for this location and date
-                Uri pollenUri = PolenContract.PolenEntry.buildPolenLocationWithDateAndPlant(
-                        mLocation,
-                        System.currentTimeMillis(),
-                        String.valueOf(plantId)
-                        );
-
-                // A cursor containing the entry for the given date, plant and location
-                Cursor pollen = getContext().getContentResolver().query(
-                        pollenUri,
-                        null,
-                        null,
-                        null,
-                        null);
-
-                if (pollen.moveToFirst())
-                    holder.statusText.setText(pollen.getInt(
-                            pollen.getColumnIndex(PolenContract.PolenEntry.COLUMN_CONCENTRATION)
-                    ));
-
-                // TODO set the flavor text properly
-            }
-
-            plant.close();
+            // TODO set the flavor text properly
 
         }
 
-        return rootView;
+        plant.close();
+
     }
 
 

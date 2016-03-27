@@ -9,9 +9,18 @@ A class that contains all utility methods and constants
  */
 public class Utilities {
 
-    //contains the total number of the plants in the DB
-    //TODO init this appropriately
+    // Contains the total number of the plants in the DB
+    // Initialized to 25 as default, changed to correct number when the data is fetched
     private static int totalPlantsNumber = 25;
+
+    /*
+    Sets the total number of plants in the database
+    This is called when the data fetch is executed
+    // TODO call this in fetch
+     */
+    public static void setTotalPlantsNumber(int number){
+        totalPlantsNumber = number;
+    }
 
     /*
     Checks whether the plant is selected or not, given the plant ID

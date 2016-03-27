@@ -30,8 +30,6 @@ import java.util.Vector;
 public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
 
     private static final String LOG_TAG = FetchPolenTask.class.getSimpleName();
-    private static final String CSV_PLANTS_PATH = "vrste polena.csv";
-    private static final String CSV_LOCATIONS_PATH = "lokacije Stanica Polen.csv";
     private final Context mContext;
 
     public FetchPolenTask(Context context){
@@ -143,89 +141,6 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
         return -1;
     }
 
-    /*
-    Parses a .csv file that is passed in as an InputStream
-    Includes a contentUri where the rows should be inserted
-     */
-    private void parseCsv(InputStream is, Uri contentUri){
-
-        // Buffered reader for the input stream
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-
-        try {
-
-            String line;
-
-            // Parse the csv line by line (line represents a row of data)
-            while ((line = reader.readLine()) != null) {
-
-                String[] RowData = line.split(",");
-
-                // Determine whether it's the plants or locations csv
-                // This is important because of index numbers of columns
-                if (contentUri == PlantEntry.CONTENT_URI)
-                    insertPlantRow(RowData, contentUri);
-
-                else if (contentUri == LocationEntry.CONTENT_URI)
-                    insertLocationRow(RowData, contentUri);
-
-            }
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Error parsing .csv file.", e);
-        }
-    }
-
-    /*
-    Inserts a row of data into the plants table
-     */
-    private void insertPlantRow(String[] row, Uri uri){
-        // A ContentValues object that will be used to put in the row
-        ContentValues cv = new ContentValues();
-
-        // Use the specific order in which the values appear in the .csv file
-        int plant_id = Integer.parseInt(row[0])-1;
-        String plant_name = row[2];
-        int plant_allergenic_index = Integer.parseInt(row[4]);
-
-        // Put the values into the ContentValues object
-        cv.put(PlantEntry.COLUMN_PLANT_ID, plant_id);
-        cv.put(PlantEntry.COLUMN_NAME, plant_name);
-        cv.put(PlantEntry.COLUMN_PLANT_ALLERGENIC_INDEX, plant_allergenic_index);
-
-        // Insert the ContentValues object in the correct table
-        mContext.getContentResolver().insert(uri, cv);
-
-    }
-
-    /*
-    Inserts a row of data into the locations table
-     */
-    private void insertLocationRow(String[] row, Uri uri){
-        // A ContentValues object that will be used to put in the row
-        ContentValues cv = new ContentValues();
-
-        // For reasons beyond my comprehension, the split method
-        // adds an invisible character to the first item in the first row
-        // TODO this is a temporary workaround until I figure it out
-        if (!Character.isDigit(row[0].charAt(0)))
-            row[0] = row[0].substring(1);
-
-        // Use the specific order in which the values appear in the .csv file
-        int location_id = Integer.parseInt(row[0]);
-        String location_name = row[1];
-        double longitude = Double.parseDouble(row[2]);
-        double latitude = Double.parseDouble(row[3]);
-
-        // Put the values into the ContentValues object
-        // using the specific order in which they appear in the .csv file
-        cv.put(LocationEntry.COLUMN_LOCATION_ID, location_id);
-        cv.put(LocationEntry.COLUMN_NAME, location_name);
-        cv.put(LocationEntry.COLUMN_LONGITUDE, longitude);
-        cv.put(LocationEntry.COLUMN_LATITUDE, latitude);
-
-        // Insert the ContentValues object in the correct table
-        mContext.getContentResolver().insert(uri, cv);
-    }
 
     @Override
     protected Void doInBackground(Void... params) {
@@ -234,46 +149,6 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
         TODO try to optimize this by fetching only the needed amount of data
         Determine the amount of data needed using the current date and last known fetch date
          */
-
-        // TODO re-download .csv in the future, currently unsafe because of bad data in them
-        // Attempt to parse the .csv files containing the locations and plants data
-        // First, get an AssetManager and an input stream for csv
-        AssetManager assetManager = mContext.getAssets();
-        InputStream csvInputStream = null;
-
-        // Attempt to open the .csv files
-        try {
-
-            // TODO this is a really brute-force way to do this
-            // Instead of dropping the tables every time here
-            // move this whole .csv part to another class
-
-            mContext.getContentResolver().delete(PlantEntry.CONTENT_URI, null, null);
-            mContext.getContentResolver().delete(LocationEntry.CONTENT_URI, null, null);
-
-            // Open and parse the plants .csv
-            csvInputStream = assetManager.open(CSV_PLANTS_PATH);
-            parseCsv(csvInputStream, PlantEntry.CONTENT_URI);
-
-            // Open and parse the locations .csv
-            csvInputStream = assetManager.open(CSV_LOCATIONS_PATH);
-            parseCsv(csvInputStream, LocationEntry.CONTENT_URI);
-
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Error opening .csv file from the assets.", e);
-
-        } finally {
-
-            // Close the input stream and asset manager
-            try {
-                csvInputStream.close();
-            } catch (IOException e) {
-                Log.e(LOG_TAG, "Error closing the .csv input stream", e);
-            }
-            // Close the asset manager
-            assetManager.close();
-        }
-
 
         // Declare those two outside try so they can be closed in finally
         HttpURLConnection urlConnection = null;
