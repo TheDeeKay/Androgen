@@ -72,25 +72,24 @@ public class FragmentMain extends Fragment {
 
             // Cursor containing the query results for plant table, should be a single plant with our ID
             Cursor plant = getContext().getContentResolver().query(
-                    PlantEntry.CONTENT_URI,
+                    plantIdUri,
                     null,
-                    PlantEntry.TABLE_NAME + "." + PlantEntry._ID + " = ?",
-                    new String[]{String.valueOf(getArguments().get(PLANT_ID))},
+                    null,
+                    null,
                     null);
 
             // If there is a plant with such ID, set the text views to display its info
             if (plant.moveToFirst()) {
 
-
-
-                String plantName = plant.getString(plant.getColumnIndex(PlantEntry.COLUMN_NAME));
                 holder.plantName.setText(plant.getString(plant.getColumnIndex(PlantEntry.COLUMN_NAME)));
+
+                int plantId = plant.getInt(plant.getColumnIndex(PlantEntry.COLUMN_PLANT_ID));
 
                 // Get a URI that matches the pollen entry with this plant ID, for this location and date
                 Uri pollenUri = PolenContract.PolenEntry.buildPolenLocationWithDateAndPlant(
                         mLocation,
                         System.currentTimeMillis(),
-                        plantName
+                        String.valueOf(plantId)
                         );
 
                 // A cursor containing the entry for the given date, plant and location
@@ -108,6 +107,8 @@ public class FragmentMain extends Fragment {
 
                 // TODO set the flavor text properly
             }
+
+            plant.close();
 
         }
 

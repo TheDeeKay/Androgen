@@ -14,6 +14,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        FetchPolenTask fetchPolenTask = new FetchPolenTask(this);
+        fetchPolenTask.execute();
+
         // Create an adapter for our viewpager and attach it
         ViewPager pager = (ViewPager) findViewById(R.id.main_pager);
         SlidingAdapter adapter = new SlidingAdapter(getSupportFragmentManager(), this);

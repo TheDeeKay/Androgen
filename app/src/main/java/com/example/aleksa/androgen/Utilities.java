@@ -66,14 +66,10 @@ public class Utilities {
     public static int getPlantIdAtPosition(int position, Context context){
 
         // check if position is valid
-        if (plantsSelectedCount(context) - 1 > position)
+        if (plantsSelectedCount(context) <= position)
             return -1;
 
         int i;
-
-        // Get shared preferences for the selected plants
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                context.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
 
         for (i = 0; (i < totalPlantsNumber) && (position > -1); i++)
             if (plantSelected(i, context)) --position;

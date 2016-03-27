@@ -52,7 +52,7 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
         final String LOCATION_ID = "ID_LOKACIJE";
 
         // Plant info
-        final String PLANT_ID = "ID_BILJKE";
+        final String PLANT_ID = "ID_VRSTE";
 
         // Entry info
         final String DATE = "DATUM";
@@ -86,7 +86,7 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
                 JSONObject polenEntry = results.getJSONObject(i);
 
                 // Extract the needed information from the JSON object using keys defined earlier
-                plantId = polenEntry.getInt(PLANT_ID);
+                plantId = Integer.parseInt(polenEntry.getString(PLANT_ID));
                 locationId = polenEntry.getInt(LOCATION_ID);
                 concentration = polenEntry.getInt(CONCENTRATION);
                 tendency = polenEntry.getInt(TENDENCY);
@@ -183,7 +183,7 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
         ContentValues cv = new ContentValues();
 
         // Use the specific order in which the values appear in the .csv file
-        int plant_id = Integer.parseInt(row[0]);
+        int plant_id = Integer.parseInt(row[0])-1;
         String plant_name = row[2];
         int plant_allergenic_index = Integer.parseInt(row[4]);
 
@@ -203,6 +203,12 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
     private void insertLocationRow(String[] row, Uri uri){
         // A ContentValues object that will be used to put in the row
         ContentValues cv = new ContentValues();
+
+        // For reasons beyond my comprehension, the split method
+        // adds an invisible character to the first item in the first row
+        // TODO this is a temporary workaround until I figure it out
+        if (!Character.isDigit(row[0].charAt(0)))
+            row[0] = row[0].substring(1);
 
         // Use the specific order in which the values appear in the .csv file
         int location_id = Integer.parseInt(row[0]);
@@ -237,6 +243,14 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
 
         // Attempt to open the .csv files
         try {
+
+            // TODO this is a really brute-force way to do this
+            // Instead of dropping the tables every time here
+            // move this whole .csv part to another class
+
+            mContext.getContentResolver().delete(PlantEntry.CONTENT_URI, null, null);
+            mContext.getContentResolver().delete(LocationEntry.CONTENT_URI, null, null);
+
             // Open and parse the plants .csv
             csvInputStream = assetManager.open(CSV_PLANTS_PATH);
             parseCsv(csvInputStream, PlantEntry.CONTENT_URI);

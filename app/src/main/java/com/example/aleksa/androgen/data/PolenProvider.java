@@ -35,10 +35,10 @@ public class PolenProvider extends ContentProvider {
         sPolenByLocationAndPlant = new SQLiteQueryBuilder();
         // Join the three tables accordingly (on plant and location IDs)
         sPolenByLocationAndPlant.setTables(
-                PolenEntry.TABLE_NAME + "INNER JOIN" + LocationEntry.TABLE_NAME
+                PolenEntry.TABLE_NAME + " INNER JOIN " + LocationEntry.TABLE_NAME
                         + " ON " + PolenEntry.TABLE_NAME + "." + PolenEntry.COLUMN_LOCATION_ID + " = "
                         + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_LOCATION_ID
-                        + " INNER JOIN" + PlantEntry.TABLE_NAME
+                        + " INNER JOIN " + PlantEntry.TABLE_NAME
                         + " ON " + PolenEntry.TABLE_NAME + "." + PolenEntry.COLUMN_PLANT_ID + " = "
                         + PlantEntry.TABLE_NAME + "." + PlantEntry.COLUMN_PLANT_ID
         );
@@ -226,6 +226,10 @@ public class PolenProvider extends ContentProvider {
 
             // plant/
             case PLANT: {
+                // Change the default sort order (when the sortOrder is null) to sort by name
+                if (sortOrder == null)
+                    sortOrder = PlantEntry.COLUMN_NAME + " ASC";
+
                 retCursor = mOpenHelper.getReadableDatabase().query(
                         PlantEntry.TABLE_NAME,
                         projection,

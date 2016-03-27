@@ -22,6 +22,10 @@ public class SlidingAdapter extends FragmentStatePagerAdapter{
 
     @Override
     public Fragment getItem(int position) {
+        // TODO the (plantID+1) is temporary, once the .csv fetch is fixed
+        // this should be reverted back to just (plantID).
+        // This is because currently the plant IDs start at 1, not 0
+
         // Find what plant ID goes to the given position
         int plantID = Utilities.getPlantIdAtPosition(position, mContext);
 
