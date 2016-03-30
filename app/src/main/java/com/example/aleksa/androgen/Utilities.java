@@ -9,6 +9,10 @@ A class that contains all utility methods and constants
  */
 public class Utilities {
 
+    // Key for stored value for location ID in the sharedPref and default location
+    public static final String LOCATION_SHAREDPREF_KEY = "location_id";
+    public static final int DEFAULT_LOCATION_ID = 1;
+
     // Contains the total number of the plants in the DB
     // Initialized to 25 as default, changed to correct number when the data is fetched
     private static int totalPlantsNumber = 25;

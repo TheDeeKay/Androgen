@@ -31,14 +31,20 @@ public class PolenDbHelper extends SQLiteOpenHelper {
                 " (" + LocationEntry.COLUMN_LOCATION_ID + " INTEGER PRIMARY KEY, " +
                 LocationEntry.COLUMN_NAME + " TEXT NOT NULL, " +
                 LocationEntry.COLUMN_LATITUDE + " REAL NOT NULL, " +
-                LocationEntry.COLUMN_LONGITUDE + " REAL NOT NULL" +
+                LocationEntry.COLUMN_LONGITUDE + " REAL NOT NULL," +
+
+                // Replace locations on new inserts
+                " UNIQUE (" + LocationEntry.COLUMN_LOCATION_ID + ") ON CONFLICT REPLACE" +
                 " );";
 
         // The CREATE statement for the plants table
         final String SQL_CREATE_PLANT_TABLE = "CREATE TABLE " + PlantEntry.TABLE_NAME +
                 " (" + PlantEntry.COLUMN_PLANT_ID + " INTEGER PRIMARY KEY, " +
                 PlantEntry.COLUMN_NAME + " TEXT NOT NULL, " +
-                PlantEntry.COLUMN_PLANT_ALLERGENIC_INDEX + " INTEGER NOT NULL" +
+                PlantEntry.COLUMN_PLANT_ALLERGENIC_INDEX + " INTEGER NOT NULL," +
+
+                // Replace plants on new inserts
+                " UNIQUE (" + PlantEntry.COLUMN_PLANT_ID + ") ON CONFLICT REPLACE" +
                 " );";
 
         // The CREATE statement for the polen table

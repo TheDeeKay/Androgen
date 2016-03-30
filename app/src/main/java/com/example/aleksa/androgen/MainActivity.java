@@ -17,6 +17,9 @@ public class MainActivity extends AppCompatActivity {
         FetchPolenTask fetchPolenTask = new FetchPolenTask(this);
         fetchPolenTask.execute();
 
+        FetchCsvTask fetchCsvTask = new FetchCsvTask(this);
+        fetchCsvTask.execute();
+
         // Create an adapter for our viewpager and attach it
         ViewPager pager = (ViewPager) findViewById(R.id.main_pager);
         SlidingAdapter adapter = new SlidingAdapter(getSupportFragmentManager(), this);

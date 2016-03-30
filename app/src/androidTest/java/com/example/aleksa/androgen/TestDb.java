@@ -1,7 +1,9 @@
 package com.example.aleksa.androgen;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.test.AndroidTestCase;
 
 import com.example.aleksa.androgen.data.PolenContract;
@@ -45,6 +47,52 @@ public class TestDb extends AndroidTestCase{
 
         // If the tableNames hashSet is not empty, it means that not all the tables are open
         assertTrue("Error: not all the tables are open.", tableNames.isEmpty());
+
+        FetchPolenTask fetchPolenTask = new FetchPolenTask(getContext());
+        fetchPolenTask.execute();
+
+        FetchCsvTask fetchCsvTask = new FetchCsvTask(getContext());
+        fetchCsvTask.execute();
+
+        ContentValues cv = new ContentValues();
+        cv.put(PolenContract.PolenEntry.COLUMN_CONCENTRATION, 1);
+        cv.put(PolenContract.PolenEntry.COLUMN_DATE, 1);
+        cv.put(PolenContract.PolenEntry.COLUMN_LOCATION_ID, 1);
+        cv.put(PolenContract.PolenEntry.COLUMN_PLANT_ID, 1);
+        cv.put(PolenContract.PolenEntry.COLUMN_TENDENCY, 0);
+        getContext().getContentResolver().insert(PolenContract.PolenEntry.CONTENT_URI,
+                cv);
+
+        cv.clear();
+        cv.put(PolenContract.LocationEntry.COLUMN_NAME, "Beograd");
+        cv.put(PolenContract.LocationEntry.COLUMN_LOCATION_ID, 1);
+        cv.put(PolenContract.LocationEntry.COLUMN_LATITUDE, 0);
+        cv.put(PolenContract.LocationEntry.COLUMN_LONGITUDE, 0);
+        getContext().getContentResolver().insert(
+                PolenContract.LocationEntry.CONTENT_URI, cv
+        );
+
+        cv.clear();
+        cv.put(PolenContract.PlantEntry.COLUMN_NAME, "Jova");
+        cv.put(PolenContract.PlantEntry.COLUMN_PLANT_ALLERGENIC_INDEX, 1);
+        cv.put(PolenContract.PlantEntry.COLUMN_PLANT_ID, 1);
+        getContext().getContentResolver().insert(
+                PolenContract.PlantEntry.CONTENT_URI, cv
+        );
+
+//        Uri queryUri = PolenContract.PolenEntry.CONTENT_URI;
+        Uri queryUri = PolenContract.PolenEntry.buildPolenLocationPlant("1", "1");
+        Cursor random = getContext().getContentResolver().query(
+                queryUri,
+                null,
+                null, null,
+                null
+        );
+
+        assertTrue("Database is empty", random.moveToFirst());
+        assertEquals("Jova", random.getString(random.getColumnIndex(PolenContract.PlantEntry.COLUMN_NAME)));
+
+        random.close();
 
     }
 }

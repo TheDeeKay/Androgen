@@ -18,7 +18,7 @@ import java.io.InputStreamReader;
 public class FetchCsvTask extends AsyncTask<Void, Void, Void> {
 
     private static final String LOG_TAG = FetchCsvTask.class.getSimpleName();
-    private static final String CSV_PLANTS_PATH = "vrste_polena.csv";
+    private static final String CSV_PLANTS_PATH = "vrste polena.csv";
     private static final String CSV_LOCATIONS_PATH = "lokacije Stanica Polen.csv";
     private final Context mContext;
 

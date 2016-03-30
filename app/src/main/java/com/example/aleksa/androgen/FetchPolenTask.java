@@ -2,13 +2,11 @@ package com.example.aleksa.androgen;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.res.AssetManager;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.example.aleksa.androgen.data.PolenContract.LocationEntry;
-import com.example.aleksa.androgen.data.PolenContract.PlantEntry;
 import com.example.aleksa.androgen.data.PolenContract.PolenEntry;
 
 import org.json.JSONArray;
@@ -84,7 +82,7 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
                 JSONObject polenEntry = results.getJSONObject(i);
 
                 // Extract the needed information from the JSON object using keys defined earlier
-                plantId = Integer.parseInt(polenEntry.getString(PLANT_ID));
+                plantId = Integer.parseInt(polenEntry.getString(PLANT_ID)) - 1;
                 locationId = polenEntry.getInt(LOCATION_ID);
                 concentration = polenEntry.getInt(CONCENTRATION);
                 tendency = polenEntry.getInt(TENDENCY);
@@ -113,6 +111,9 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
                 ContentValues[] contents = new ContentValues[cVVector.size()];
                 cVVector.toArray(contents);
                 inserted = mContext.getContentResolver().bulkInsert(PolenEntry.CONTENT_URI, contents);
+            }
+            else {
+                Log.e(LOG_TAG, "The CVVector is empty.");
             }
 
             Log.d(LOG_TAG, "Successfully fetched data and inserted " + inserted + " entries.");
@@ -160,13 +161,26 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
             // Strings that serve for building the query
             final String POLEN_BASE_URL = mContext.getString(R.string.data_sepa_gov);
             final String RESOURCE_PARAM = "resource_id";
+            final String SORT_PARAM = "sort";
+            final String FILTER_LOCATION_PARAM = "filters[ID_LOKACIJE]";
 
             // Resource IDs for different tables
             final String RESOURCE_POLEN = mContext.getString(R.string.polen_json_id);
+            // Sort order, in this case sorted by date descending
+            final String SORT_BY_DATE = "(DATUM desc)";
 
-            // Construct the Uris for querying the tables
+            // Get location ID so we can download only the data for our location
+            SharedPreferences sharedPref = mContext.getSharedPreferences(
+                    mContext.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE
+            );
+            int locationId = sharedPref.getInt(
+                    Utilities.LOCATION_SHAREDPREF_KEY, Utilities.DEFAULT_LOCATION_ID);
+
+            // Construct the Uri for querying the remote database
             Uri queryPolenUri = Uri.parse(POLEN_BASE_URL).buildUpon()
                     .appendQueryParameter(RESOURCE_PARAM, RESOURCE_POLEN)
+                    .appendQueryParameter(SORT_PARAM, SORT_BY_DATE)
+                    .appendQueryParameter(FILTER_LOCATION_PARAM, String.valueOf(locationId))
                     .build();
 
             // URL for the query
@@ -182,8 +196,10 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
             StringBuffer buffer = new StringBuffer();
 
             // If there is nothing to do
-            if (inputStream == null)
+            if (inputStream == null) {
+                Log.e(LOG_TAG, "The input stream from remote database is empty.");
                 return null;
+            }
 
             reader = new BufferedReader(new InputStreamReader(inputStream));
 
@@ -192,8 +208,10 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
                 buffer.append(line + "\n");
 
             // If buffer is empty, there's nothing to parse
-            if (buffer.length() == 0)
+            if (buffer.length() == 0) {
+                Log.e(LOG_TAG, "The buffer is empty.");
                 return null;
+            }
 
             String polenJsonStr = buffer.toString();
             getDataFromJSON(polenJsonStr);

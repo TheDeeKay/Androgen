@@ -21,7 +21,7 @@ public class PolenProvider extends ContentProvider {
     // Unique values for matched types of URIs
     private static final int POLEN = 100;
     private static final int POLEN_WITH_LOCATION = 101;
-    private static final int POLEN_WITH_LOCATION_DATE = 102;
+    private static final int POLEN_WITH_LOCATION_PLANT = 102;
     private static final int POLEN_WITH_LOCATION_DATE_PLANT = 103;
     private static final int LOCATION = 200;
     private static final int LOCATION_WITH_ID = 201;
@@ -29,12 +29,12 @@ public class PolenProvider extends ContentProvider {
     private static final int PLANT_WITH_ID = 301;
 
     // This is a query builder for the three tables joined together
-    private static final SQLiteQueryBuilder sPolenByLocationAndPlant;
+    private static final SQLiteQueryBuilder sPolenByLocationAndPlantQueryBuilder;
     // Initialization for the query builder
     static {
-        sPolenByLocationAndPlant = new SQLiteQueryBuilder();
+        sPolenByLocationAndPlantQueryBuilder = new SQLiteQueryBuilder();
         // Join the three tables accordingly (on plant and location IDs)
-        sPolenByLocationAndPlant.setTables(
+        sPolenByLocationAndPlantQueryBuilder.setTables(
                 PolenEntry.TABLE_NAME + " INNER JOIN " + LocationEntry.TABLE_NAME
                         + " ON " + PolenEntry.TABLE_NAME + "." + PolenEntry.COLUMN_LOCATION_ID + " = "
                         + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_LOCATION_ID
@@ -53,16 +53,17 @@ public class PolenProvider extends ContentProvider {
             PolenEntry.TABLE_NAME + "." +
                     PolenEntry.COLUMN_LOCATION_ID + " = ? ";
 
-    // String for selection of entries by location and date
-    // polen.location_id = ? AND polen.date = ?
-    private static final String sLocationDateSelection =
+    // String for selection of entries by location ID and plant ID
+    // polen.location_id = ? AND polen.plant_id = ?
+    private static final String sLocationPlantSelection =
             sLocationSelection + AND +
-                    PolenEntry.TABLE_NAME + "." + PolenEntry.COLUMN_DATE + " = ? ";
+                    PolenEntry.TABLE_NAME + "." + PolenEntry.COLUMN_PLANT_ID + " = ? ";
 
     // String for selection of entries by location, date, and plant
     // polen.location_id = ? AND polen.date = ? AND polen.plant_id = ?
     private static final String sLocationDatePlantSelection =
-            sLocationDateSelection + AND +
+            sLocationSelection + AND +
+                    PolenEntry.TABLE_NAME + "." + PolenEntry.COLUMN_DATE + " = ? " + AND +
                     PolenEntry.TABLE_NAME + "." + PolenEntry.COLUMN_PLANT_ID + " = ? ";
 
     // A database defined in the contract and helper
@@ -76,7 +77,7 @@ public class PolenProvider extends ContentProvider {
 
         matcher.addURI(authority, PolenContract.PATH_POLEN, POLEN);
         matcher.addURI(authority, PolenContract.PATH_POLEN + "/*", POLEN_WITH_LOCATION);
-        matcher.addURI(authority, PolenContract.PATH_POLEN + "/*/#", POLEN_WITH_LOCATION_DATE);
+        matcher.addURI(authority, PolenContract.PATH_POLEN + "/*/#", POLEN_WITH_LOCATION_PLANT);
         matcher.addURI(authority, PolenContract.PATH_POLEN + "/*/#/*", POLEN_WITH_LOCATION_DATE_PLANT);
 
         matcher.addURI(authority, PolenContract.PATH_LOCATION, LOCATION);
@@ -96,7 +97,7 @@ public class PolenProvider extends ContentProvider {
         String plant = String.valueOf(PolenContract.getPlantFromUri(uri));
         long date = PolenContract.getDateFromUri(uri);
 
-        return sPolenByLocationAndPlant.query(mOpenHelper.getReadableDatabase(),
+        return sPolenByLocationAndPlantQueryBuilder.query(mOpenHelper.getReadableDatabase(),
                 projection,
                 sLocationDatePlantSelection,
                 new String[]{location, Long.toString(date), plant},
@@ -104,17 +105,17 @@ public class PolenProvider extends ContentProvider {
                 sortOrder);
     }
 
-    // Get the rows with the given location and date which are determined from uri
-    private Cursor getPolenLocationDate(Uri uri, String[] projection, String sortOrder) {
+    // Get the rows with the given location ID and plant ID which are determined from uri
+    private Cursor getPolenLocationPlant(Uri uri, String[] projection, String sortOrder) {
 
         // Extract details from uri
         String location = PolenContract.getLocationFromUri(uri);
-        long date = PolenContract.getDateFromUri(uri);
+        String plant = uri.getPathSegments().get(2);
 
-        return sPolenByLocationAndPlant.query(mOpenHelper.getReadableDatabase(),
+        return sPolenByLocationAndPlantQueryBuilder.query(mOpenHelper.getReadableDatabase(),
                 projection,
-                sLocationDateSelection,
-                new String[]{location, Long.toString(date)},
+                sLocationPlantSelection,
+                new String[]{location, plant},
                 null, null,
                 sortOrder
         );
@@ -126,9 +127,9 @@ public class PolenProvider extends ContentProvider {
         // Extract location from uri
         String location = PolenContract.getLocationFromUri(uri);
 
-        return sPolenByLocationAndPlant.query(mOpenHelper.getReadableDatabase(),
+        return sPolenByLocationAndPlantQueryBuilder.query(mOpenHelper.getReadableDatabase(),
                 projection,
-                sLocationDateSelection,
+                sLocationSelection,
                 new String[]{location},
                 null, null,
                 sortOrder
@@ -154,8 +155,8 @@ public class PolenProvider extends ContentProvider {
             }
 
             // polen/*/#
-            case POLEN_WITH_LOCATION_DATE: {
-                retCursor = getPolenLocationDate(uri, projection, sortOrder);
+            case POLEN_WITH_LOCATION_PLANT: {
+                retCursor = getPolenLocationPlant(uri, projection, sortOrder);
                 break;
             }
 
@@ -264,7 +265,7 @@ public class PolenProvider extends ContentProvider {
             case POLEN_WITH_LOCATION:
                 return PolenEntry.CONTENT_TYPE;
 
-            case POLEN_WITH_LOCATION_DATE:
+            case POLEN_WITH_LOCATION_PLANT:
                 return PolenEntry.CONTENT_TYPE;
 
             case POLEN_WITH_LOCATION_DATE_PLANT:
@@ -309,7 +310,7 @@ public class PolenProvider extends ContentProvider {
                 break;
             }
             case LOCATION: {
-                long _id = db.insert(LocationEntry.TABLE_NAME, null, values);
+                long _id = db.insertWithOnConflict(LocationEntry.TABLE_NAME, null, values, SQLiteDatabase.CONFLICT_REPLACE);
 
                 if (_id != -1)
                     returnUri = LocationEntry.buildLocationUri(_id);
@@ -318,7 +319,7 @@ public class PolenProvider extends ContentProvider {
                 break;
             }
             case PLANT: {
-                long _id = db.insert(PlantEntry.TABLE_NAME, null, values);
+                long _id = db.insertWithOnConflict(PlantEntry.TABLE_NAME, null, values, SQLiteDatabase.CONFLICT_REPLACE);
 
                 if (_id != -1)
                     returnUri = PlantEntry.buildPlantUri(_id);
@@ -456,7 +457,7 @@ public class PolenProvider extends ContentProvider {
 
         if (values.containsKey(PolenEntry.COLUMN_DATE)) {
             long dateValue = values.getAsLong(PolenEntry.COLUMN_DATE);
-            values.put(PolenEntry.COLUMN_DATE, PolenContract.standardizeDate(dateValue));
+            values.put(PolenEntry.COLUMN_DATE, PolenContract.standardizeServerDate(dateValue));
         }
     }
 }

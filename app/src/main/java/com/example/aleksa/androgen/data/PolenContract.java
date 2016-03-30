@@ -24,8 +24,12 @@ public class PolenContract {
     public static final String PATH_POLEN = "polen";
     public static final String PATH_LOCATION = "location";
 
-    // TODO standardize date somehow
-    public static long standardizeDate(long date) {
+    /*
+    TODO
+    Standardizes the date
+    Takes in local time in milliseconds, returns UTC time in millis
+     */
+    public static long standardizeServerDate(long date) {
         return date;
     }
 
@@ -68,18 +72,28 @@ public class PolenContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
-        // Returns URI referencing polen entry with the given location and date
-        public static Uri buildPolenLocationWithDate(String location, long date){
-            long standardDate = standardizeDate(date);
+        // Returns URI referencing polen entry with the given location ID and plant ID
+        public static Uri buildPolenLocationWithPlant(String location, String plant){
             return CONTENT_URI.buildUpon().appendPath(location).
-                    appendPath(Long.toString(standardDate)).build();
+                    appendPath(plant).build();
         }
 
         // Returns URI referencing polen entry with the given location, date, and plant
         public static Uri buildPolenLocationWithDateAndPlant(String location, long date, String plant){
-            long standardDate = standardizeDate(date);
+            long standardDate = standardizeServerDate(date);
             return CONTENT_URI.buildUpon().appendPath(location).
                     appendPath(Long.toString(standardDate)).appendPath(plant).build();
+        }
+
+        // Returns a URI referencing polen entry with the given location ID
+        public static Uri buildPolenLocation(String location){
+            return CONTENT_URI.buildUpon().appendPath(location).build();
+        }
+
+        // Returns a URI referencing polen entry with the given location ID and plant ID
+        public static Uri buildPolenLocationPlant(String location, String plant){
+            return CONTENT_URI.buildUpon().
+                    appendPath(location).appendPath(plant).build();
         }
 
     }
@@ -160,7 +174,7 @@ public class PolenContract {
 
     // Takes a uri and extracts date from it, then standardizes it
     public static long getDateFromUri(Uri uri){
-        return standardizeDate(Long.parseLong(uri.getPathSegments().get(2)));
+        return standardizeServerDate(Long.parseLong(uri.getPathSegments().get(2)));
     }
 
     // Takes a uri and extracts plant id from it
