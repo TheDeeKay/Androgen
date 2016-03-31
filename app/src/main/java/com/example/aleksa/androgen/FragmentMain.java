@@ -1,7 +1,5 @@
 package com.example.aleksa.androgen;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -121,12 +119,7 @@ public class FragmentMain extends Fragment {
         // Get today's midnight time
         long midnightTime = getMidnightMillis();
 
-        // Get the location setting, or use default if it isn't available
-        SharedPreferences sharedPref = getContext().getSharedPreferences(
-                getContext().getString(R.string.shared_pref_plants),
-                Context.MODE_PRIVATE
-        );
-        int locationId = sharedPref.getInt(Utilities.LOCATION_SHAREDPREF_KEY, Utilities.DEFAULT_LOCATION_ID);
+        int locationId = Utilities.getPreferredLocation(getContext());
 
         // Now, create a Uri for querying the database, contains locationId and plantId
         Uri queryUri = PolenEntry.buildPolenLocationPlant(String.valueOf(locationId), String.valueOf(plantId));

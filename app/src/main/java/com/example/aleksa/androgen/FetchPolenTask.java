@@ -2,7 +2,6 @@ package com.example.aleksa.androgen;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -169,12 +168,7 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
             // Sort order, in this case sorted by date descending
             final String SORT_BY_DATE = "(DATUM desc)";
 
-            // Get location ID so we can download only the data for our location
-            SharedPreferences sharedPref = mContext.getSharedPreferences(
-                    mContext.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE
-            );
-            int locationId = sharedPref.getInt(
-                    Utilities.LOCATION_SHAREDPREF_KEY, Utilities.DEFAULT_LOCATION_ID);
+            int locationId = Utilities.getPreferredLocation(mContext);
 
             // Construct the Uri for querying the remote database
             Uri queryPolenUri = Uri.parse(POLEN_BASE_URL).buildUpon()

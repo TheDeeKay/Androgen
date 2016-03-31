@@ -90,4 +90,12 @@ public class Utilities {
         return i-1;
     }
 
+    // Returns the ID of currently selected location, or the default one
+    public static int getPreferredLocation(Context context){
+        SharedPreferences sharedPref =
+                context.getSharedPreferences(context.getString(R.string.shared_pref_plants),
+                        Context.MODE_PRIVATE);
+
+        return sharedPref.getInt(LOCATION_SHAREDPREF_KEY, DEFAULT_LOCATION_ID);
+    }
 }
