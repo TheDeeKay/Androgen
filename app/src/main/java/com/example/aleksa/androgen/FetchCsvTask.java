@@ -174,8 +174,6 @@ public class FetchCsvTask extends AsyncTask<Void, Void, Void> {
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error closing the .csv input stream", e);
             }
-            // Close the asset manager
-            assetManager.close();
         }
         return null;
     }
