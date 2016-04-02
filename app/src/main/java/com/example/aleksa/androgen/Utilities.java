@@ -9,9 +9,12 @@ A class that contains all utility methods and constants
  */
 public class Utilities {
 
-    // Key for stored value for location ID in the sharedPref and default location
+    // Key for stored value for location ID in the sharedPref and default location ID
     public static final String LOCATION_SHAREDPREF_KEY = "location_id";
     public static final int DEFAULT_LOCATION_ID = 1;
+
+    public static final int SELECTED = 1;
+    public static final int UNSELECTED = 0;
 
     // Contains the total number of the plants in the DB
     // Initialized to 25 as default, changed to correct number when the data is fetched
@@ -27,18 +30,35 @@ public class Utilities {
     }
 
     /*
+    Changes the selected status of a plant with the given ID
+    The selected status is changed to 0 or 1, given by the selected parameter
+     */
+    public static void setPlantSelected(int plantId, int selected, Context context){
+
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                context.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE
+        );
+
+        SharedPreferences.Editor editor = sharedPref.edit();
+
+        editor.putInt(String.valueOf(plantId), selected);
+
+        editor.commit();
+    }
+
+    /*
     Checks whether the plant is selected or not, given the plant ID
      */
     public static boolean plantSelected(int plantID, Context context){
 
         // Get a handle to the shared preferences containing info about plant selections
         // The values are stored as (String plantId, int selected)
-        // selected values are 0 and 1 (0 for selected, 1 for unselected)
+        // selected values are 0 and 1 (1 for selected, 0 for unselected)
         SharedPreferences sharedPref = context.getSharedPreferences(
                 context.getString(R.string.shared_pref_plants), context.MODE_PRIVATE
         );
 
-        return (sharedPref.getInt(Integer.toString(plantID), 0) == 0);
+        return (sharedPref.getInt(Integer.toString(plantID), SELECTED) == SELECTED);
     }
 
     /*
@@ -59,7 +79,7 @@ public class Utilities {
 
         // Iterate through sharedPref and check every plantId for selection
         for (int i = 0; i <= plantID; i++){
-            if (sharedPref.getInt(Integer.toString(i), 0) == 0) count++ ;
+            if (sharedPref.getInt(Integer.toString(i), SELECTED) == SELECTED) count++ ;
         }
 
         return count;
@@ -97,5 +117,23 @@ public class Utilities {
                         Context.MODE_PRIVATE);
 
         return sharedPref.getInt(LOCATION_SHAREDPREF_KEY, DEFAULT_LOCATION_ID);
+    }
+
+    /*
+    The plants in the database have IDs assigned to them based on Latin name
+    We are displaying plants ordered by Serbian name
+
+    Thus it is useful to know which sorted index corresponds to which plantId
+     */
+    public static int getPlantIdFromSorted(int sortedIndex, Context context){
+        int plantId;
+
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                context.getString(R.string.shared_pref_sorted_ids), Context.MODE_PRIVATE
+        );
+
+        plantId = sharedPref.getInt(String.valueOf(sortedIndex), sortedIndex);
+
+        return plantId;
     }
 }

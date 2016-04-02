@@ -3,7 +3,9 @@ package com.example.aleksa.androgen;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.AssetManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -53,6 +55,37 @@ public class FetchCsvTask extends AsyncTask<Void, Void, Void> {
                     insertLocationRow(RowData, contentUri);
 
             }
+
+            // After inserting, fill the sharedpref for sorted plant indexes
+            Cursor queryPlants = mContext.getContentResolver().query(
+                    PolenContract.PlantEntry.CONTENT_URI,
+                    null,
+                    null, null,
+                    PolenContract.PlantEntry.COLUMN_NAME + " ASC"
+            );
+
+            if (queryPlants.moveToFirst()){
+
+                SharedPreferences sharedPref = mContext.getSharedPreferences(
+                        mContext.getString(R.string.shared_pref_sorted_ids), Context.MODE_PRIVATE
+                );
+                SharedPreferences.Editor editor = sharedPref.edit();
+
+                do {
+
+                    int plantId = queryPlants.getInt(
+                            queryPlants.getColumnIndex(PolenContract.PlantEntry.COLUMN_NAME));
+
+                    int sortedIndex = queryPlants.getPosition();
+
+                    editor.putInt(String.valueOf(sortedIndex), plantId);
+
+                } while (!queryPlants.moveToNext());
+
+                editor.commit();
+            }
+
+            queryPlants.close();
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error parsing .csv file.", e);
         }

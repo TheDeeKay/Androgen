@@ -1,31 +1,62 @@
 package com.example.aleksa.androgen;
 
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.BaseColumns;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class PlantSelectionActivity extends AppCompatActivity {
+import com.example.aleksa.androgen.data.PolenContract;
 
-    //TODO temporary for testing purposes
-    private static final String[] PLANTS = new String[]{
-            "Neka biljcica 1",
-            "Neka biljcica 2",
-            "Neka biljcica 3",
-            "Neka biljcica 4",
-            "Neka biljcica 5",
-            "Neka biljcica 6",};
+public class PlantSelectionActivity extends AppCompatActivity
+implements LoaderManager.LoaderCallbacks<Cursor>{
+
+    private SimpleCursorAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.plants_selection);
 
-        //TODO use loader here instead, once the DB and content providers are in
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                R.layout.plants_selection_list_item,
-                PLANTS);
+        mAdapter = new SelectionCursorAdapter(this,
+                R.layout.plants_selection_list_item, null,
+                new String[]{PolenContract.PlantEntry.COLUMN_NAME},
+                new int[]{R.id.item_plant_selection}, 0);
 
-        ((ListView)findViewById(R.id.list_plants_selection)).setAdapter(adapter);
+        ((ListView)findViewById(R.id.list_plants_selection)).setAdapter(mAdapter);
+
+        getSupportLoaderManager().initLoader(0, null, this);
+    }
+
+    @Override
+    public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        Uri queryUri = PolenContract.PlantEntry.CONTENT_URI;
+
+        String[] columns = new String[]{
+                PolenContract.PlantEntry.COLUMN_PLANT_ID + " AS " + BaseColumns._ID,
+                PolenContract.PlantEntry.COLUMN_NAME
+        };
+
+        return new CursorLoader(this,
+                queryUri,
+                columns,
+                null, null,
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mAdapter.swapCursor(null);
     }
 }
