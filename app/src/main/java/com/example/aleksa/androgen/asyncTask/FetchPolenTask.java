@@ -1,4 +1,4 @@
-package com.example.aleksa.androgen;
+package com.example.aleksa.androgen.asyncTask;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -6,6 +6,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.example.aleksa.androgen.R;
+import com.example.aleksa.androgen.Utilities;
 import com.example.aleksa.androgen.data.PolenContract.PolenEntry;
 
 import org.json.JSONArray;

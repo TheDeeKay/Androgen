@@ -1,4 +1,4 @@
-package com.example.aleksa.androgen;
+package com.example.aleksa.androgen.adapter;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -9,6 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.aleksa.androgen.R;
+import com.example.aleksa.androgen.Utilities;
 import com.example.aleksa.androgen.data.PolenContract.PlantEntry;
 
 // TODO change the color of the strikethrough here somehow
