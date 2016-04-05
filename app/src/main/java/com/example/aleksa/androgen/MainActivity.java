@@ -6,6 +6,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.example.aleksa.androgen.adapter.SlidingAdapter;
+import com.example.aleksa.androgen.asyncTask.FetchCsvTask;
+import com.example.aleksa.androgen.asyncTask.FetchPolenTask;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -18,6 +22,9 @@ public class MainActivity extends AppCompatActivity {
 
         FetchCsvTask fetchCsvTask = new FetchCsvTask(this);
         fetchCsvTask.execute();
+
+        LocationTracker lt = new LocationTracker(this);
+        lt.connect();
 
         // Create an adapter for our viewpager and attach it
         ViewPager pager = (ViewPager) findViewById(R.id.main_pager);

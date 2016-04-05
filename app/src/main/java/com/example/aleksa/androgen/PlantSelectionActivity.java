@@ -11,6 +11,7 @@ import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.ListView;
 
+import com.example.aleksa.androgen.adapter.SelectionCursorAdapter;
 import com.example.aleksa.androgen.data.PolenContract;
 
 public class PlantSelectionActivity extends AppCompatActivity

@@ -6,6 +6,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.test.AndroidTestCase;
 
+import com.example.aleksa.androgen.asyncTask.FetchCsvTask;
+import com.example.aleksa.androgen.asyncTask.FetchPolenTask;
 import com.example.aleksa.androgen.data.PolenContract;
 import com.example.aleksa.androgen.data.PolenDbHelper;
 
