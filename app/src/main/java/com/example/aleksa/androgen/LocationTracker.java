@@ -9,9 +9,10 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.example.aleksa.androgen.data.PolenContract;
@@ -38,7 +39,7 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
     Runnable mRequestExpiredRunnable;
 
     public LocationTracker(Context context) {
-
+// TODO check if the network provider is on, if not - launch the settings
         mContext = context;
 
         mGoogleApiClient = new GoogleApiClient.Builder(context)
@@ -58,16 +59,16 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
     private void informLocationRequestFailed(){
         // TODO extract this message to a string resource and make this a snackbar with retry
         Toast.makeText(mContext, "Odredjivanje lokacije neuspelo", Toast.LENGTH_LONG).show();
+        mGoogleApiClient.disconnect();
     }
 
     @Override
     public void onConnected(Bundle bundle) {
 
         // Check whether the permissions were granted (will most likely trigger on SDK 23+)
-        if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED)
+        {
 
             // Request ACCESS_COARSE_LOCATION permission
             ActivityCompat.requestPermissions((Activity) mContext,
@@ -76,7 +77,9 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
 
         }
 
-        // Get a handler which we will later in case our request expires
+        // TODO check if we can getLastLocation here
+
+        // Get a handler which we will use later in case our request expires
         mRequestExpiredHandler = new Handler();
 
         mRequestExpiredRunnable = new Runnable() {
@@ -89,7 +92,7 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
         // Create a LocationRequest for getting our location
         LocationRequest request = LocationRequest.create();
 
-        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        request.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
 
         request.setInterval(1000);
         request.setFastestInterval(100);
@@ -121,7 +124,6 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
 
     @Override
     public void onLocationChanged(Location location) {
-        // TODO decide how to act on location change
         // First determine the closest location, then select it and tell the user how far they are
 
         // Location reading succeeded, we don't need the Handler callback anymore
@@ -164,8 +166,27 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
                 Toast.makeText(mContext, text, Toast.LENGTH_LONG).show();
             }
             else {
-                // TODO make a snackbar here
-                Toast.makeText(mContext, "Izaberite ručno lokaciju.", Toast.LENGTH_LONG).show();
+                // If the distance to nearest is greater than 30km, just let them pick manually
+
+                MainActivity mainActivity = (MainActivity) mContext;
+
+                String snackbarText = String.format(
+                        "Najbliža lokacija je %s na %.2fkm. Izaberite ručno",
+                        nearestLocationName, distanceToNearest[0]/1000);
+                Snackbar snackbar = Snackbar.make(
+                        mainActivity.findViewById(R.id.main_pager),
+                        snackbarText,
+                        Snackbar.LENGTH_INDEFINITE);
+
+                View.OnClickListener listener = new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // TODO launch the location picker here
+                    }
+                };
+                snackbar.setAction("Izaberi ručno", listener);
+
+                snackbar.show();
             }
         }
     }

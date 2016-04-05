@@ -37,4 +37,8 @@ public class SlidingAdapter extends FragmentStatePagerAdapter{
         return Utilities.plantsSelectedCount(mContext);
     }
 
+    @Override
+    public int getItemPosition(Object object) {
+        return POSITION_NONE;
+    }
 }
