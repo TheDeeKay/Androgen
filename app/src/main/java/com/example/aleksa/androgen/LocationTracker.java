@@ -3,14 +3,19 @@ package com.example.aleksa.androgen;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -22,8 +27,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-// TODO before using this class, we should check if the appropriate providers are on (if not, turn on first)
-/*
+/* TODO this class expects the context to be MainActivity, use carefully or change in the future
 A class that handles a GoogleApiClient for location, and the logic for getting a location
 
 Gets the current location, or displays a message explaining why it is not available
@@ -39,7 +43,7 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
     Runnable mRequestExpiredRunnable;
 
     public LocationTracker(Context context) {
-// TODO check if the network provider is on, if not - launch the settings
+
         mContext = context;
 
         mGoogleApiClient = new GoogleApiClient.Builder(context)
@@ -51,14 +55,68 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
 
     public void connect() {
 
-        mGoogleApiClient.connect();
+
+        // Get a location manager
+        LocationManager locationManager =
+                (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
+
+        // Check whether the network provider is enabled or not
+        // If it's not, we should ask the user to enable it first
+        if (!locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+
+            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mContext);
+
+            // TODO extract this to a string resource
+            alertDialogBuilder.setMessage("Lokacija je isključena. Da li biste želeli " +
+                    "da je uključite?")
+                    .setCancelable(false)
+                    .setPositiveButton(
+                            "Uključi",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    Intent setLocationSettings = new Intent(
+                                            Settings.ACTION_LOCATION_SOURCE_SETTINGS
+                                    );
+                                    mContext.startActivity(setLocationSettings);
+                                }
+                            }
+                    )
+                    .setNegativeButton("Ne želim",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    Toast.makeText(mContext, "Određivanje lokacije nemoguće",
+                                            Toast.LENGTH_LONG).show();
+                                }
+                            }
+                    );
+
+            alertDialogBuilder.show();
+
+        }
+
+        // Check again whether the provider is on, since the user maybe didn't turn it on
+            mGoogleApiClient.connect();
 
     }
 
     // A method that informs the user that the request for location has failed
     private void informLocationRequestFailed(){
-        // TODO extract this message to a string resource and make this a snackbar with retry
-        Toast.makeText(mContext, "Odredjivanje lokacije neuspelo", Toast.LENGTH_LONG).show();
+        // TODO extract this message to a string resource
+
+        Snackbar.make(
+                ((MainActivity)mContext).findViewById(R.id.main_pager),
+                "Određivanje lokacije neuspelo",
+                Snackbar.LENGTH_INDEFINITE)
+                .setAction("Pokušaj ponovo", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        connect();
+                    }
+                })
+                .show();
+
         mGoogleApiClient.disconnect();
     }
 
@@ -77,7 +135,7 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
 
         }
 
-        // TODO check if we can getLastLocation here
+        // TODO maybe check if we can getLastLocation here?
 
         // Get a handler which we will use later in case our request expires
         mRequestExpiredHandler = new Handler();
@@ -173,14 +231,15 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
                 String snackbarText = String.format(
                         "Najbliža lokacija je %s na %.2fkm. Izaberite ručno",
                         nearestLocationName, distanceToNearest[0]/1000);
-                Snackbar snackbar = Snackbar.make(
+                final Snackbar snackbar = Snackbar.make(
                         mainActivity.findViewById(R.id.main_pager),
                         snackbarText,
-                        Snackbar.LENGTH_INDEFINITE);
+                        Snackbar.LENGTH_LONG);
 
                 View.OnClickListener listener = new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        snackbar.dismiss();
                         // TODO launch the location picker here
                     }
                 };
