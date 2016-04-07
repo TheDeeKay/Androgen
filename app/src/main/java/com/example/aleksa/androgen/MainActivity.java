@@ -1,12 +1,15 @@
 package com.example.aleksa.androgen;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.example.aleksa.androgen.adapter.SlidingAdapter;
 import com.example.aleksa.androgen.asyncTask.FetchCsvTask;
@@ -15,6 +18,8 @@ import com.example.aleksa.androgen.asyncTask.FetchPolenTask;
 public class MainActivity extends AppCompatActivity {
 
     private SlidingAdapter mAdapter;
+
+    private FloatingActionButton mFab;
 
     private ViewPager mPager;
 
@@ -57,6 +62,17 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new SlidingAdapter(getSupportFragmentManager(), this);
         mPager.setAdapter(mAdapter);
 
+
+        mFab = (FloatingActionButton) findViewById(R.id.fab);
+        mFab.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View v) {
+                Intent listShowIntent = new Intent(MainActivity.this, PlantSelectionActivity.class);
+                startActivity(listShowIntent);
+            }
+        });
+
         // Register the SharedPreferences listener
         sharedPref.registerOnSharedPreferenceChangeListener(mListener);
     }
@@ -92,5 +108,12 @@ public class MainActivity extends AppCompatActivity {
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(mListener);
 
         super.onStop();
+    }
+
+    @Override
+    protected void onResume() {
+        mAdapter.notifyDataSetChanged();
+
+        super.onResume();
     }
 }
