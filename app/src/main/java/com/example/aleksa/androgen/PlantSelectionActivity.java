@@ -17,7 +17,7 @@ import com.example.aleksa.androgen.data.PolenContract;
 public class PlantSelectionActivity extends AppCompatActivity
 implements LoaderManager.LoaderCallbacks<Cursor>{
 
-    private SimpleCursorAdapter mAdapter;
+    private SelectionCursorAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

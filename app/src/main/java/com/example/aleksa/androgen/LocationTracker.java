@@ -28,6 +28,8 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 /* TODO this class expects the context to be MainActivity, use carefully or change in the future
+    also, snackbars wil LENGTH_INDEFINITE cannot be canceled, so fix that
+
 A class that handles a GoogleApiClient for location, and the logic for getting a location
 
 Gets the current location, or displays a message explaining why it is not available
@@ -67,6 +69,11 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
             final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mContext);
 
             // TODO extract this to a string resource
+
+            // Display an alert dialog that asks the user whether they want to enable location
+            // If they choose to enable, they will be taken to the settings screen and when
+            // they return, the location logic will trigger
+            // If they decline, a message will appear and the location logic will not trigger
             alertDialogBuilder.setMessage("Lokacija je isključena. Da li biste želeli " +
                     "da je uključite?")
                     .setCancelable(false)
@@ -79,6 +86,7 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
                                             Settings.ACTION_LOCATION_SOURCE_SETTINGS
                                     );
                                     mContext.startActivity(setLocationSettings);
+
                                 }
                             }
                     )
@@ -96,15 +104,14 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
 
         }
 
-        // Check again whether the provider is on, since the user maybe didn't turn it on
-            mGoogleApiClient.connect();
-
     }
 
     // A method that informs the user that the request for location has failed
     private void informLocationRequestFailed(){
-        // TODO extract this message to a string resource
 
+        mGoogleApiClient.disconnect();
+
+        // TODO extract this message to a string resource
         Snackbar.make(
                 ((MainActivity)mContext).findViewById(R.id.main_pager),
                 "Određivanje lokacije neuspelo",
@@ -116,8 +123,6 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
                     }
                 })
                 .show();
-
-        mGoogleApiClient.disconnect();
     }
 
     @Override
@@ -248,5 +253,7 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
                 snackbar.show();
             }
         }
+
+        mGoogleApiClient.disconnect();
     }
 }
