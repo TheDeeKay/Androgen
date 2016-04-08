@@ -1,19 +1,30 @@
 package com.example.aleksa.androgen;
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.BaseColumns;
+import android.support.annotation.ColorRes;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewAnimationUtils;
-import android.view.ViewTreeObserver;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 
 import com.example.aleksa.androgen.adapter.SelectionCursorAdapter;
 import com.example.aleksa.androgen.data.PolenContract;
@@ -22,7 +33,8 @@ public class PlantSelectionActivity extends AppCompatActivity
 implements LoaderManager.LoaderCallbacks<Cursor>{
 
     private SelectionCursorAdapter mAdapter;
-    private FrameLayout rootLayout;
+    private RelativeLayout rootLayout;
+    private FrameLayout rootFrame;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,26 +45,19 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
                 R.layout.plants_selection_list_item, null,
                 new String[]{PolenContract.PlantEntry.COLUMN_NAME},
                 new int[]{R.id.item_plant_selection}, 0);
-        rootLayout = (FrameLayout)findViewById(R.id.root_layout);
+        rootLayout = (RelativeLayout) findViewById(R.id.root_layout);
+        rootFrame = (FrameLayout) findViewById(R.id.root_frame);
 
         ((ListView)findViewById(R.id.list_plants_selection)).setAdapter(mAdapter);
 
         getSupportLoaderManager().initLoader(0, null, this);
 
-        if (savedInstanceState == null) {
-            rootLayout.setVisibility(View.INVISIBLE);
-
-            ViewTreeObserver viewTreeObserver = rootLayout.getViewTreeObserver();
-            if (viewTreeObserver.isAlive()) {
-                viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        circularRevealActivity();
-                        rootLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                    }
-                });
+        rootLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                setupEnterAnimation();
             }
-        }
+        });
     }
 
     @Override
@@ -82,19 +87,70 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
         mAdapter.swapCursor(null);
     }
 
-    private void circularRevealActivity() {
 
-        int cx = rootLayout.getWidth() / 2;
-        int cy = rootLayout.getHeight() / 2;
 
-        float finalRadius = Math.max(rootLayout.getWidth(), rootLayout.getHeight());
+    // NEW ANIMATION TESTING
 
-        // create the animator for this view (the start radius is zero)
-        Animator circularReveal = ViewAnimationUtils.createCircularReveal(rootLayout, cx, cy, 0, finalRadius);
-        circularReveal.setDuration(1000);
-
-        // make the view visible and start the animation
-        rootLayout.setVisibility(View.VISIBLE);
-        circularReveal.start();
+    private void setupEnterAnimation() {
+        animateRevealShow(rootLayout);
     }
+
+
+    private void initViews() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                Animation animation = AnimationUtils.loadAnimation(PlantSelectionActivity.this, android.R.anim.slide_in_left);
+                animation.setDuration(500);
+                rootFrame.startAnimation(animation);
+                rootFrame.setVisibility(View.VISIBLE);
+                System.out.println("CALLED INIT VIEWS!!");
+            }
+        });
+    }
+
+    private void animateRevealShow(final View viewRoot) {
+        int cx = (viewRoot.getLeft() + viewRoot.getRight()) / 2;
+        int cy = (viewRoot.getTop() + viewRoot.getBottom()) / 2;
+            animateRevealShow(this, viewRoot, 0, R.color.colorAccent,
+                cx, cy, new OnRevealAnimationListener() {
+                    @Override
+                    public void onRevealHide() {
+
+                    }
+
+                    @Override
+                    public void onRevealShow() {
+                        initViews();
+                    }
+                });
+    }
+
+
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public void animateRevealShow(final Context ctx, final View view, final int startRadius,
+                                         @ColorRes final int color, int x, int y, final OnRevealAnimationListener listener) {
+        float finalRadius = (float) Math.hypot(view.getWidth(), view.getHeight());
+        Animator anim = ViewAnimationUtils.createCircularReveal(view, x, y, startRadius, finalRadius);
+        anim.setDuration(ctx.getResources().getInteger(R.integer.animation_duration));
+        anim.setInterpolator(new FastOutLinearInInterpolator());
+        anim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                view.setBackgroundColor(ContextCompat.getColor(ctx, color));
+                listener.onRevealShow();
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if(listener != null) {
+                    //listener.onRevealShow();
+                }
+                view.setVisibility(View.VISIBLE);
+            }
+        });
+        anim.start();
+    }
+
 }

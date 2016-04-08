@@ -68,8 +68,9 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                Intent listShowIntent = new Intent(MainActivity.this, PlantSelectionActivity.class);
+                Intent listShowIntent = new Intent(MainActivity.this, PlantSelectionActivity.class).addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(listShowIntent);
+                overridePendingTransition(0, 0);
             }
         });
 
