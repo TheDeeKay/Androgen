@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.BaseColumns;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -14,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 
 import com.example.aleksa.androgen.adapter.SelectionCursorAdapter;
 import com.example.aleksa.androgen.data.PolenContract;
@@ -37,31 +39,51 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
                 new String[]{PolenContract.PlantEntry.COLUMN_NAME},
                 new int[]{R.id.item_plant_selection}, 0);
 
-        final ListView list = ((ListView)findViewById(R.id.list_plants_selection));
+        ListView list = ((ListView) findViewById(R.id.list_plants_selection));
 
         list.setAdapter(mAdapter);
 
+        // Remove borders between TextViews
+        list.setDivider(null);
+
         getSupportLoaderManager().initLoader(0, null, this);
 
-        if (savedInstanceState == null){
+        // Remove the enter and exit animations from this activity, since they mess with reveal
+        this.overridePendingTransition(0, 0);
 
-            list.setVisibility(View.INVISIBLE);
+        final RelativeLayout rLayout =
+                (RelativeLayout) findViewById(R.id.selection_relative_layout);
 
-            ViewTreeObserver viewTreeObserver = list.getViewTreeObserver();
+        final FloatingActionButton floatingAB = (FloatingActionButton) findViewById(R.id.selection_fab);
 
-            if (viewTreeObserver.isAlive()){
+        // Set the onClick to FAB to unreveal and close this activity
+        floatingAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hideAnimation(rLayout, floatingAB);
+            }
+        });
+
+
+        if (savedInstanceState == null) {
+
+            rLayout.setVisibility(View.INVISIBLE);
+
+            ViewTreeObserver viewTreeObserver = rLayout.getViewTreeObserver();
+
+            if (viewTreeObserver.isAlive()) {
                 viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
                     @Override
                     public void onGlobalLayout() {
-                        revealAnimation(list);
-                        list.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        revealAnimation(rLayout, floatingAB);
+                        rLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                     }
                 });
             }
         }
-    }
 
+    }
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
@@ -89,21 +111,86 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
         mAdapter.swapCursor(null);
     }
 
-    private void revealAnimation(final View view){
+    private void revealAnimation(View mainView, FloatingActionButton fAB){
 
-        int cx = view.getWidth() / 2;
-        int cy = view.getHeight() / 2;
+        int[] center = new int[2];
 
-        int dx = Math.max(view.getWidth() - cx, cx);
-        int dy = Math.max(view.getHeight() - cy, cy);
+        getFABLocation(fAB, center);
+
+        int cx = center[0];
+        int cy = center[1];
+
+        int dx = Math.max(mainView.getWidth() - cx, cx);
+        int dy = Math.max(mainView.getHeight() - cy, cy);
+
+        float initialRadius = (float) (fAB.getWidth() / 2.0);
+
         float finalRadius = (float) Math.hypot(dx, dy);
 
-        SupportAnimator animator = createCircularReveal(view, cx, cy, 0, finalRadius);
+        SupportAnimator animator =
+                createCircularReveal(mainView, cx, cy, initialRadius, finalRadius);
 
-        animator.setDuration(500);
+        animator.setDuration(1000);
 
-        view.setVisibility(View.VISIBLE);
+        mainView.setVisibility(View.VISIBLE);
 
         animator.start();
+    }
+
+    private void hideAnimation(final View mainView, FloatingActionButton fAB){
+
+        int[] center = new int[2];
+        getFABLocation(fAB, center);
+
+        int cx = center[0];
+        int cy = center[1];
+
+        int dx = Math.max(mainView.getWidth() - cx, cx);
+        int dy = Math.max(mainView.getHeight() - cy, cy);
+
+        float initialRadius = (float) Math.hypot(dx, dy);
+
+        float finalRadius = (float) (fAB.getWidth() / 2.0);
+
+        SupportAnimator animator =
+                createCircularReveal(mainView, cx, cy, initialRadius, finalRadius);
+
+        animator.setDuration(1000);
+
+        animator.addListener(new SupportAnimator.AnimatorListener() {
+            @Override
+            public void onAnimationStart() {
+
+            }
+
+            @Override
+            public void onAnimationEnd() {
+                mainView.setVisibility(View.INVISIBLE);
+                finish();
+            }
+
+            @Override
+            public void onAnimationCancel() {
+
+            }
+
+            @Override
+            public void onAnimationRepeat() {
+
+            }
+        });
+
+        animator.start();
+    }
+
+    private void getFABLocation(FloatingActionButton fAB, int[] results){
+
+        int[] beginning = new int[2];
+
+        fAB.getLocationOnScreen(beginning);
+
+        results[0] = beginning[0] + (fAB.getWidth() / 2);
+
+        results[1] = beginning[1] + (fAB.getHeight() / 2);
     }
 }

@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new SlidingAdapter(getSupportFragmentManager(), this);
         pager.setAdapter(mAdapter);
 
-        FloatingActionButton floatingAB = (FloatingActionButton) findViewById(R.id.floating_AB);
+        FloatingActionButton floatingAB = (FloatingActionButton) findViewById(R.id.main_fab);
 
         final Context context = this;
 
