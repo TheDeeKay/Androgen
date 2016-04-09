@@ -1,10 +1,18 @@
 package com.example.aleksa.androgen;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+
+import com.example.aleksa.androgen.adapter.SlidingAdapter;
+import com.example.aleksa.androgen.asyncTask.FetchCsvTask;
+import com.example.aleksa.androgen.asyncTask.FetchPolenTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,6 +31,18 @@ public class MainActivity extends AppCompatActivity {
         ViewPager pager = (ViewPager) findViewById(R.id.main_pager);
         SlidingAdapter adapter = new SlidingAdapter(getSupportFragmentManager(), this);
         pager.setAdapter(adapter);
+
+        FloatingActionButton floatingAB = (FloatingActionButton) findViewById(R.id.floating_AB);
+
+        final Context context = this;
+
+        floatingAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(context, PlantSelectionActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
