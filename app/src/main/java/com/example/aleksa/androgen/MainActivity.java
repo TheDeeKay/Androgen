@@ -16,7 +16,7 @@ import com.example.aleksa.androgen.asyncTask.FetchPolenTask;
 
 public class MainActivity extends AppCompatActivity {
 
-    SlidingAdapter mAdapter;
+    private  SlidingAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

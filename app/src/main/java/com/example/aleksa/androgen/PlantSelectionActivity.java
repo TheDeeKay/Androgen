@@ -89,7 +89,6 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
         mAdapter.swapCursor(null);
     }
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void revealAnimation(final View view){
 
         int cx = view.getWidth() / 2;
@@ -100,8 +99,6 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
         float finalRadius = (float) Math.hypot(dx, dy);
 
         SupportAnimator animator = createCircularReveal(view, cx, cy, 0, finalRadius);
-
-        //animator.setInterpolator(new AccelerateDecelerateInterpolator());
 
         animator.setDuration(500);
 

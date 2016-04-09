@@ -27,7 +27,7 @@
             android:label="@string/title_activity_main2"
             android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.Transparent"
-            android:launchMode="singleTask">
+            >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.aleksa.androgen.MainActivity" />
