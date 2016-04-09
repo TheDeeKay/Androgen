@@ -13,7 +13,6 @@ import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewTreeObserver;
-import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ListView;
 
 import com.example.aleksa.androgen.adapter.SelectionCursorAdapter;
@@ -102,7 +101,7 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
 
         SupportAnimator animator = createCircularReveal(view, cx, cy, 0, finalRadius);
 
-        animator.setInterpolator(new AccelerateDecelerateInterpolator());
+        //animator.setInterpolator(new AccelerateDecelerateInterpolator());
 
         animator.setDuration(500);
 

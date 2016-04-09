@@ -16,6 +16,8 @@ import com.example.aleksa.androgen.asyncTask.FetchPolenTask;
 
 public class MainActivity extends AppCompatActivity {
 
+    SlidingAdapter mAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,8 +31,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Create an adapter for our viewpager and attach it
         ViewPager pager = (ViewPager) findViewById(R.id.main_pager);
-        SlidingAdapter adapter = new SlidingAdapter(getSupportFragmentManager(), this);
-        pager.setAdapter(adapter);
+        mAdapter = new SlidingAdapter(getSupportFragmentManager(), this);
+        pager.setAdapter(mAdapter);
 
         FloatingActionButton floatingAB = (FloatingActionButton) findViewById(R.id.floating_AB);
 
@@ -65,5 +67,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mAdapter.notifyDataSetChanged();
     }
 }
