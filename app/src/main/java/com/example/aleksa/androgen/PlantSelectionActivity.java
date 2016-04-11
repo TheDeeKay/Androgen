@@ -29,6 +29,8 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
 
     private SimpleCursorAdapter mAdapter;
 
+    private final static int ANIMATION_DURATION = 1000;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,14 +58,6 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
 
         final FloatingActionButton floatingAB = (FloatingActionButton) findViewById(R.id.selection_fab);
 
-        // Set the onClick to FAB to unreveal and close this activity
-        floatingAB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                hideAnimation(rLayout, floatingAB);
-            }
-        });
-
 
         if (savedInstanceState == null) {
 
@@ -76,7 +70,7 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
                     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
                     @Override
                     public void onGlobalLayout() {
-                        revealAnimation(rLayout, floatingAB);
+                        revealAnimation(rLayout, floatingAB, ANIMATION_DURATION);
                         rLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                     }
                 });
@@ -111,7 +105,10 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
         mAdapter.swapCursor(null);
     }
 
-    private void revealAnimation(View mainView, FloatingActionButton fAB){
+
+    // TODO there's still a bug in the animator
+    // if it's started and then clicked 2 times before it finishes
+    private void revealAnimation(final View mainView, final FloatingActionButton fAB, int time){
 
         int[] center = new int[2];
 
@@ -127,17 +124,63 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
 
         float finalRadius = (float) Math.hypot(dx, dy);
 
-        SupportAnimator animator =
+        initialRadius = initialRadius +
+                (finalRadius - initialRadius) * (ANIMATION_DURATION -time) / ANIMATION_DURATION;
+
+        final SupportAnimator animator =
                 createCircularReveal(mainView, cx, cy, initialRadius, finalRadius);
 
-        animator.setDuration(1000);
+        animator.setDuration(time);
+
+        final long startTime = System.currentTimeMillis();
+
+        animator.addListener(new SupportAnimator.AnimatorListener() {
+
+            boolean wasCancelled = false;
+
+            @Override
+            public void onAnimationStart() {
+                if (Build.VERSION.SDK_INT >= 21)
+                    fAB.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            animator.cancel();
+                        }
+                    });
+                else
+                    fAB.setOnClickListener(null);
+            }
+
+            @Override
+            public void onAnimationEnd() {
+                if (!wasCancelled)
+                    fAB.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            hideAnimation(mainView, fAB, ANIMATION_DURATION);
+                        }
+                    });
+            }
+
+            @Override
+            public void onAnimationCancel() {
+                wasCancelled = true;
+                hideAnimation(
+                        mainView, fAB, (int) (System.currentTimeMillis() - startTime));
+            }
+
+            @Override
+            public void onAnimationRepeat() {
+
+            }
+        });
 
         mainView.setVisibility(View.VISIBLE);
 
         animator.start();
     }
 
-    private void hideAnimation(final View mainView, FloatingActionButton fAB){
+    private void hideAnimation(final View mainView, final FloatingActionButton fAB, int time){
 
         int[] center = new int[2];
         getFABLocation(fAB, center);
@@ -152,26 +195,46 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
 
         float finalRadius = (float) (fAB.getWidth() / 2.0);
 
-        SupportAnimator animator =
+        initialRadius = initialRadius +
+                (finalRadius - initialRadius) * (ANIMATION_DURATION -time) / ANIMATION_DURATION;
+
+        final SupportAnimator animator =
                 createCircularReveal(mainView, cx, cy, initialRadius, finalRadius);
 
-        animator.setDuration(1000);
+        animator.setDuration(time);
+
+        final long startTime = System.currentTimeMillis();
 
         animator.addListener(new SupportAnimator.AnimatorListener() {
+
+            boolean wasCancelled = false;
+
             @Override
             public void onAnimationStart() {
-
+                if (Build.VERSION.SDK_INT >= 21)
+                    fAB.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            animator.cancel();
+                        }
+                    });
+                else
+                    fAB.setOnClickListener(null);
             }
 
             @Override
             public void onAnimationEnd() {
-                mainView.setVisibility(View.INVISIBLE);
-                finish();
+                if (!wasCancelled) {
+                    mainView.setVisibility(View.INVISIBLE);
+                    finish();
+                }
             }
 
             @Override
             public void onAnimationCancel() {
-
+                wasCancelled = true;
+                revealAnimation(
+                        mainView, fAB, (int) (System.currentTimeMillis() - startTime));
             }
 
             @Override
