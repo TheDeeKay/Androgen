@@ -146,7 +146,7 @@ public class FragmentMain extends Fragment {
 
                 // TODO display some warning that the data is not fresh
 
-                holder.percentageText.setText("Vreme nesto ne valja");
+                holder.percentageText.setText(String.valueOf(locationId));
 
             }
         }

@@ -2,6 +2,11 @@ package com.example.aleksa.androgen;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.location.Location;
+import android.net.Uri;
+
+import com.example.aleksa.androgen.data.PolenContract.LocationEntry;
 
 /*
 A class that contains all utility methods and constants
@@ -135,5 +140,67 @@ public class Utilities {
         plantId = sharedPref.getInt(String.valueOf(sortedIndex), sortedIndex);
 
         return plantId;
+    }
+
+    /*
+    Takes longitude and latitude of a location and returns the nearest location ID from our DB
+     */
+    public static int findNearestLocation(double longitude, double latitude, Context context,
+                                          float[] distanceToNearest) {
+
+        Uri queryUri = LocationEntry.CONTENT_URI;
+
+        Cursor locations = context.getContentResolver().query(
+                queryUri,
+                null,
+                null, null,
+                null
+        );
+
+        // Set to -1, which is return code of this method for "query failed"
+        int returnIndex = -1;
+
+        distanceToNearest[0] = Float.POSITIVE_INFINITY;
+
+        if (locations.moveToFirst()){
+
+            int idColumnIndex = locations.getColumnIndex(LocationEntry.COLUMN_LOCATION_ID);
+            int longitudeColumnIndex = locations.getColumnIndex(LocationEntry.COLUMN_LONGITUDE);
+            int latitudeColumnIndex = locations.getColumnIndex(LocationEntry.COLUMN_LATITUDE);
+
+            do{
+
+                double currLongitude = locations.getDouble(longitudeColumnIndex);
+                double currLatitude = locations.getDouble(latitudeColumnIndex);
+
+                float[] distance = new float[1];
+
+                Location.distanceBetween(
+                        currLatitude, currLongitude,
+                        latitude, longitude,
+                        distance);
+
+                if (distance[0] < distanceToNearest[0]) {
+
+                    distanceToNearest[0] = distance[0];
+                    returnIndex = locations.getInt(idColumnIndex);
+                }
+
+            } while(locations.moveToNext());
+        }
+
+        return returnIndex;
+    }
+
+    /*
+    // TODO set a listener for this in the MainActivity
+    Set the selected location to the ID given as parameter
+     */
+    public static void setLocation(int locationId, Context context){
+
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                context.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
+
+        sharedPref.edit().putInt(LOCATION_SHAREDPREF_KEY, locationId).commit();
     }
 }

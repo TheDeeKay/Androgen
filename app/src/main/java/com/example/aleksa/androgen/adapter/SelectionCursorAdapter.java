@@ -48,6 +48,9 @@ public class SelectionCursorAdapter extends SimpleCursorAdapter{
             if (!Utilities.plantSelected(plantId, mContext)){
                 textView.setPaintFlags(textView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             }
+            else {
+                textView.setPaintFlags(textView.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
+            }
 
             returnView.setOnClickListener(new View.OnClickListener() {
                 @Override

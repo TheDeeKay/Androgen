@@ -3,6 +3,7 @@
     <string name="action_settings">Settings</string>
 
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="google_app_id">AIzaSyBvBZHm67QFFmiTofJmE2xwybsXpqdBkcM</string>
     <string name="title_activity_main2">Main2Activity</string>
     <string name="shared_pref_plants">com.example.aleksa.androgen.shared_pref_plants</string>
     <string name="shared_pref_sorted_ids">com.example.aleksa.androgen.shared_pref_sorted</string>

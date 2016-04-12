@@ -7,7 +7,6 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.example.aleksa.androgen.R;
-import com.example.aleksa.androgen.Utilities;
 import com.example.aleksa.androgen.data.PolenContract.PolenEntry;
 
 import org.json.JSONArray;
@@ -157,6 +156,8 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
         BufferedReader reader = null;
 
         // Attempt to fetch the JSON data, parse, and insert it
+        // TODO this is hardcoded value here, get a better way of dealing with it
+        for (int locationId = 1; locationId <= 18; locationId++) {
         try{
 
             // Strings that serve for building the query
@@ -169,9 +170,6 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
             final String RESOURCE_POLEN = mContext.getString(R.string.polen_json_id);
             // Sort order, in this case sorted by date descending
             final String SORT_BY_DATE = "(DATUM desc)";
-
-            int locationId = Utilities.getPreferredLocation(mContext);
-
             // Construct the Uri for querying the remote database
             Uri queryPolenUri = Uri.parse(POLEN_BASE_URL).buildUpon()
                     .appendQueryParameter(RESOURCE_PARAM, RESOURCE_POLEN)
@@ -229,7 +227,7 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
                 } catch (IOException e) {
                     Log.e(LOG_TAG, "Error closing stream", e);
                 }
-        }
+        }}
 
         return null;
     }
