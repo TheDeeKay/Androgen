@@ -42,7 +42,7 @@ public class SelectionCursorAdapter extends SimpleCursorAdapter{
 
             final int plantId = Utilities.getPlantIdFromSorted(position, mContext);
 
-            textView.setText(plantName);
+            textView.setText(plantName.toUpperCase());
 
             // If it's not selected, we want it to be strikethrough
             if (!Utilities.plantSelected(plantId, mContext)){

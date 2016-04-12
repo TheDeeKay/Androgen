@@ -89,7 +89,7 @@ public class Utilities {
     Gets the total number of currently selected plants
      */
     public static int plantsSelectedCount(Context context){
-        return plantsSelectedCount(totalPlantsNumber, context);
+        return plantsSelectedCount(totalPlantsNumber-1, context);
     }
 
     /*

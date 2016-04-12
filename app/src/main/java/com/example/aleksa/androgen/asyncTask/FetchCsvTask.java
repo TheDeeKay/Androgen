@@ -75,13 +75,13 @@ public class FetchCsvTask extends AsyncTask<Void, Void, Void> {
                 do {
 
                     int plantId = queryPlants.getInt(
-                            queryPlants.getColumnIndex(PolenContract.PlantEntry.COLUMN_NAME));
+                            queryPlants.getColumnIndex(PolenContract.PlantEntry.COLUMN_PLANT_ID));
 
                     int sortedIndex = queryPlants.getPosition();
 
                     editor.putInt(String.valueOf(sortedIndex), plantId);
 
-                } while (!queryPlants.moveToNext());
+                } while (queryPlants.moveToNext());
 
                 editor.commit();
             }

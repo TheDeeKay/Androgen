@@ -1,7 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ListView xmlns:android="http://schemas.android.com/apk/res/android"
+<io.codetail.widget.RevealFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/list_plants_selection">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android.support.design="http://schemas.android.com/tools"
+    android:id="@+id/selection_root_view">
 
-</ListView>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/selection_relative_layout">
+
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/list_plants_selection"
+            android:background="@android:color/holo_blue_dark"/>
+
+        <android.support.design.widget.FloatingActionButton
+            style="@style/Widget.Design.FloatingActionButton.Selection"
+            app:backgroundTint="@android:color/white"
+            app:rippleColor="@android:color/white"
+            android:id="@+id/selection_fab"/>
+
+    </RelativeLayout>
+</io.codetail.widget.RevealFrameLayout>
