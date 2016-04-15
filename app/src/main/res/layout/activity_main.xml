@@ -1,18 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:id="@+id/drawer_main">
 
-    <android.support.v4.view.ViewPager
-        android:id="@+id/main_pager"
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <android.support.design.widget.FloatingActionButton
-        style="@style/Widget.Design.FloatingActionButton.Selection"
-        app:backgroundTint="@android:color/white"
-        app:rippleColor="@android:color/white"
-        android:id="@+id/main_fab"/>
+        <android.support.v4.view.ViewPager
+            android:id="@+id/main_pager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
 
-</RelativeLayout>
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/drawer_image"
+            android:background="@android:color/transparent"
+            android:id="@+id/location_button"/>
+
+        <android.support.design.widget.FloatingActionButton
+            style="@style/Widget.Design.FloatingActionButton.Selection"
+            app:backgroundTint="@android:color/white"
+            app:rippleColor="@android:color/white"
+            android:id="@+id/main_fab"/>
+
+    </RelativeLayout>
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:choiceMode="singleChoice"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="0dp"
+        android:id="@+id/location_selection_list_view"
+        android:layout_gravity="start"
+        android:background="@android:color/holo_blue_dark"/>
+</android.support.v4.widget.DrawerLayout>
