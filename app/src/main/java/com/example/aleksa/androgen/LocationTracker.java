@@ -37,6 +37,8 @@ Gets the current location, or displays a message explaining why it is not availa
 public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener{
 
+    private static final String TAG = "LocationTracker";
+
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 100;
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
@@ -57,9 +59,20 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
 
     public void connect() {
 
+        // Check whether the permissions were granted (will most likely trigger on SDK 23+)
+        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED)
+        {
+
+            // Request ACCESS_COARSE_LOCATION permission
+            ActivityCompat.requestPermissions((Activity) mContext,
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+
+        }
 
         // Get a location manager
-        LocationManager locationManager =
+        final LocationManager locationManager =
                 (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
 
         // Check whether the network provider is enabled or not
@@ -82,11 +95,17 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
+                                    // Launch location settings
                                     Intent setLocationSettings = new Intent(
                                             Settings.ACTION_LOCATION_SOURCE_SETTINGS
                                     );
                                     mContext.startActivity(setLocationSettings);
 
+                                    // If the user enabled location, connect
+                                    if (locationManager.isProviderEnabled(
+                                            LocationManager.NETWORK_PROVIDER)) {
+                                        mGoogleApiClient.connect();
+                                    }
                                 }
                             }
                     )
@@ -102,6 +121,9 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
 
             alertDialogBuilder.show();
 
+        }
+        else {
+            mGoogleApiClient.connect();
         }
 
     }
@@ -169,7 +191,7 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 mGoogleApiClient, request, this);
 
-        mRequestExpiredHandler.postDelayed(mRequestExpiredRunnable, 1000 * 10);
+        mRequestExpiredHandler.postDelayed(mRequestExpiredRunnable, 1000 * 6);
     }
 
     @Override

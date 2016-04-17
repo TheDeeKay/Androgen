@@ -29,13 +29,26 @@
 
     </RelativeLayout>
 
-    <ListView
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:choiceMode="singleChoice"
-        android:divider="@android:color/transparent"
-        android:dividerHeight="0dp"
-        android:id="@+id/location_selection_list_view"
+        android:orientation="vertical"
         android:layout_gravity="start"
-        android:background="@android:color/holo_blue_dark"/>
+        android:background="@android:color/holo_blue_dark"
+        android:id="@+id/drawer_content">
+
+        <TextView
+            style="@style/LocationList"
+            android:id="@+id/detect_location_text"
+            android:text="Detektuj lokaciju" />
+
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="0dp"
+            android:id="@+id/location_selection_list_view" />
+
+    </LinearLayout>
+
 </android.support.v4.widget.DrawerLayout>

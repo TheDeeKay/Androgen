@@ -22,10 +22,6 @@ public class FragmentMain extends Fragment {
 
     private static final String PLANT_ID = "plant_id";
 
-    // ID of default location, used if there is no selected location in shared preferences
-    private static final int DEFAULT_LOCATION_ID = 1;
-
-
     /*
     ViewHolder class for the views in the fragment
      */
