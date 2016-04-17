@@ -2,19 +2,21 @@ package com.example.aleksa.androgen.adapter;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Paint;
+import android.graphics.Rect;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.example.aleksa.androgen.R;
+import com.example.aleksa.androgen.SelectionTextView;
 import com.example.aleksa.androgen.Utilities;
 import com.example.aleksa.androgen.data.PolenContract.PlantEntry;
 
 // TODO change the color of the strikethrough here somehow
 public class SelectionCursorAdapter extends SimpleCursorAdapter{
+
+    private static final String TAG = "SelectionCursorAdapter";
 
     public SelectionCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to, int flags) {
         super(context, layout, c, from, to, flags);
@@ -34,7 +36,8 @@ public class SelectionCursorAdapter extends SimpleCursorAdapter{
 
         if (mCursor.moveToPosition(position)){
 
-            TextView textView = (TextView) returnView.findViewById(R.id.item_plant_selection);
+            final SelectionTextView textView =
+                    (SelectionTextView) returnView.findViewById(R.id.item_plant_selection);
 
             // Get plant name
             String plantName = mCursor.getString(
@@ -46,26 +49,42 @@ public class SelectionCursorAdapter extends SimpleCursorAdapter{
 
             // If it's not selected, we want it to be strikethrough
             if (!Utilities.plantSelected(plantId, mContext)){
-                textView.setPaintFlags(textView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+//                textView.setPaintFlags(textView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                textView.strikeThrough = true;
+                textView.invalidate();
             }
             else {
-                textView.setPaintFlags(textView.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
+//                textView.setPaintFlags(textView.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
+                textView.strikeThrough = false;
+                textView.invalidate();
             }
 
             returnView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
-                    TextView text = (TextView) v;
+                    SelectionTextView text = (SelectionTextView) v;
+
+                    Rect bounds = new Rect();
+
+                    text.getPaint().getTextBounds(
+                            (String) text.getText(), 0, text.getText().length(), bounds);
+
+                    text.textWidth = bounds.width();
 
                     if (Utilities.plantSelected(plantId, mContext)){
 
-                        text.setPaintFlags(text.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+//                        text.setPaintFlags(text.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                        text.strikeThrough = true;
+                        text.invalidate();
+
                         Utilities.setPlantSelected(plantId, Utilities.UNSELECTED, mContext);
                     }
                     else {
 
-                        text.setPaintFlags(text.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
+//                        text.setPaintFlags(text.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
+                        text.strikeThrough = false;
+                        text.invalidate();
                         Utilities.setPlantSelected(plantId, Utilities.SELECTED, mContext);
                     }
 
