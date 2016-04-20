@@ -39,6 +39,8 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
 
     private static final String TAG = "LocationTracker";
 
+    private boolean isActive = false;
+
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 100;
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
@@ -104,6 +106,7 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
                                     // If the user enabled location, connect
                                     if (locationManager.isProviderEnabled(
                                             LocationManager.NETWORK_PROVIDER)) {
+                                        isActive = true;
                                         mGoogleApiClient.connect();
                                     }
                                 }
@@ -123,6 +126,7 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
 
         }
         else {
+            isActive = true;
             mGoogleApiClient.connect();
         }
 
@@ -132,6 +136,7 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
     private void informLocationRequestFailed(){
 
         mGoogleApiClient.disconnect();
+        isActive = false;
 
         // TODO extract this message to a string resource
         Snackbar.make(
@@ -234,9 +239,10 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
                     null
             );
             nearestLocation.moveToFirst();
-
             String nearestLocationName = nearestLocation.getString(
                     nearestLocation.getColumnIndex(PolenContract.LocationEntry.COLUMN_NAME));
+
+            nearestLocation.close();
 
             // If the distance is not greater than 30km, pick it and display a message
             if (distanceToNearest[0] <= 1000 * 30){
@@ -277,5 +283,10 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
         }
 
         mGoogleApiClient.disconnect();
+        isActive = false;
+    }
+
+    public boolean isActive(){
+        return isActive;
     }
 }

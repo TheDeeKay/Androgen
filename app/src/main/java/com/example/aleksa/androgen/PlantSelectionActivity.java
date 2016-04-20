@@ -41,11 +41,7 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
                 new int[]{R.id.item_plant_selection}, 0);
 
         ListView list = ((ListView) findViewById(R.id.list_plants_selection));
-
         list.setAdapter(mAdapter);
-
-        // Remove borders between TextViews
-        list.setDivider(null);
 
         getSupportLoaderManager().initLoader(0, null, this);
 

@@ -189,6 +189,8 @@ public class Utilities {
             } while(locations.moveToNext());
         }
 
+        locations.close();
+
         return returnIndex;
     }
 

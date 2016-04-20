@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SlidingAdapter mAdapter;
     private Context mContext;
+    private LocationTracker mLocationTracker = null;
 
     // Hold a reference to the sharedPref listener, otherwise it gets GCed
     private SharedPreferences.OnSharedPreferenceChangeListener mListener;
@@ -89,8 +90,13 @@ public class MainActivity extends AppCompatActivity {
         detectLocationView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                LocationTracker location = new LocationTracker(mContext);
-                location.connect();
+                if (mLocationTracker == null)
+                    mLocationTracker = new LocationTracker(mContext);
+
+                // Check if the mLocationTracker is already connected or connecting
+                if (!mLocationTracker.isActive()){
+                    mLocationTracker.connect();
+                }
             }
         });
 
@@ -100,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
         pager.setAdapter(mAdapter);
 
         FloatingActionButton floatingAB = (FloatingActionButton) findViewById(R.id.main_fab);
-
         floatingAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

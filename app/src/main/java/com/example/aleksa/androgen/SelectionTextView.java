@@ -28,9 +28,11 @@ public class SelectionTextView extends TextView{
     private void init(Context context) {
         paint = new Paint();
 
+        double alphaPercentage = 0.75;
+
         paint.setColor(ContextCompat.getColor(context, R.color.strikethrough));
         paint.setStrokeWidth(getResources().getDisplayMetrics().density * 6);
-        paint.setAlpha(191);
+        paint.setAlpha((int) (255 * alphaPercentage));
     }
 
     @Override
