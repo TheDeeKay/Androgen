@@ -98,10 +98,10 @@ public class Utilities {
     }
 
     /*
-    Returns the ID of the plant that has the given position among the selected ones
+    Returns the ID of the plant that has the given position among the selected ones, sorted by name
     Returns -1 if the plant ID is not found
      */
-    public static int getPlantIdAtPosition(int position, Context context){
+    public static int getPlantIdAtPositionSorted(int position, Context context){
 
         // check if position is valid
         if (plantsSelectedCount(context) <= position)
@@ -110,9 +110,11 @@ public class Utilities {
         int i;
 
         for (i = 0; (i < totalPlantsNumber) && (position > -1); i++)
-            if (plantSelected(i, context)) --position;
+            if (plantSelected(getPlantIdFromSortedIndex(i, context), context)) {
+                --position;
+            }
 
-        return i-1;
+        return getPlantIdFromSortedIndex(i-1, context);
     }
 
     // Returns the ID of currently selected location, or the default one
@@ -130,7 +132,7 @@ public class Utilities {
 
     Thus it is useful to know which sorted index corresponds to which plantId
      */
-    public static int getPlantIdFromSorted(int sortedIndex, Context context){
+    public static int getPlantIdFromSortedIndex(int sortedIndex, Context context){
         int plantId;
 
         SharedPreferences sharedPref = context.getSharedPreferences(
@@ -195,7 +197,6 @@ public class Utilities {
     }
 
     /*
-    // TODO set a listener for this in the MainActivity
     Set the selected location to the ID given as parameter
      */
     public static void setLocation(int locationId, Context context){

@@ -139,10 +139,12 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
         isActive = false;
 
         // TODO extract this message to a string resource
+        //noinspection WrongConstant
         Snackbar.make(
                 ((MainActivity)mContext).findViewById(R.id.main_pager),
                 "Određivanje lokacije neuspelo",
-                Snackbar.LENGTH_INDEFINITE)
+                Snackbar.LENGTH_LONG)
+                .setDuration(7000)
                 .setAction("Pokušaj ponovo", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -186,6 +188,8 @@ public class LocationTracker implements GoogleApiClient.ConnectionCallbacks,
 
         request.setInterval(1000);
         request.setFastestInterval(100);
+
+        request.setSmallestDisplacement(0);
 
         // Set the number of updates to just 1, since we don't need real-time tracking
         request.setNumUpdates(1);

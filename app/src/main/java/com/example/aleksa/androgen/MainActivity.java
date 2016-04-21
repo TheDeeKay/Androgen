@@ -10,7 +10,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
@@ -19,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.aleksa.androgen.adapter.LocationListAdapter;
 import com.example.aleksa.androgen.adapter.SlidingAdapter;
 import com.example.aleksa.androgen.asyncTask.FetchCsvTask;
 import com.example.aleksa.androgen.asyncTask.FetchPolenTask;
@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private SlidingAdapter mAdapter;
     private Context mContext;
     private LocationTracker mLocationTracker = null;
+    private LocationListAdapter locationListAdapter;
 
     // Hold a reference to the sharedPref listener, otherwise it gets GCed
     private SharedPreferences.OnSharedPreferenceChangeListener mListener;
@@ -45,23 +46,9 @@ public class MainActivity extends AppCompatActivity {
         // Fetch the data from .csv files and from the server, if possible and adequate
         fetchData();
 
-        SharedPreferences sharedPref = getSharedPreferences(
-                getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
-
-        // Add a listener to watch for location changes and notify the adapter on change
-        mListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
-                    @Override
-                    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                        // Notify change only if the changed value is the selected location ID
-                        if (key.equals(Utilities.LOCATION_SHAREDPREF_KEY))
-                            mAdapter.notifyDataSetChanged();
-                    }
-                };
-
-
         // Get a reference to the DrawerLayout and set its scrim color
         final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_main);
-        drawerLayout.setScrimColor(0xFFFFFF); // TODO move this to a color resource
+        drawerLayout.setScrimColor(0x00FFFFFF); // TODO move this to a color resource
 
         // The list of locations within the drawer
         final ListView locationList = (ListView) findViewById(R.id.location_selection_list_view);
@@ -105,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new SlidingAdapter(getSupportFragmentManager(), this);
         pager.setAdapter(mAdapter);
 
+        // Set onClickListener to the floating action button
         FloatingActionButton floatingAB = (FloatingActionButton) findViewById(R.id.main_fab);
         floatingAB.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -114,8 +102,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Register the SharedPreferences listener
-        sharedPref.registerOnSharedPreferenceChangeListener(mListener);
+        registerLocationPreferencesListener();
     }
 
     @Override
@@ -150,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
 
         Also attaches OnClickListener to all the items in the list to modify the selected location
          */
-    private void setLocationListAdapter(ListView locationList){
+    private void setLocationListAdapter(final ListView locationList){
 
         // Get a cursor containing all of our locations
         Cursor locationCursor = getContentResolver().query(
@@ -165,20 +152,21 @@ public class MainActivity extends AppCompatActivity {
         locationCursor.moveToFirst();
 
         // Create a simple cursor adapter with our locations cursor and set it to the drawer list
-        SimpleCursorAdapter locationAdapter = new SimpleCursorAdapter(
+        locationListAdapter = new LocationListAdapter(
                 this,
                 R.layout.location_selection_list_item,
                 locationCursor,
                 new String[]{LocationEntry.COLUMN_NAME},
                 new int[]{R.id.item_location_selection},
-                0
-        );
-        locationList.setAdapter(locationAdapter);
+                0,
+                locationList);
+        locationList.setAdapter(locationListAdapter);
 
         locationList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Utilities.setLocation((int) l, mContext);
+                locationListAdapter.notifyDataSetChanged();
             }
         });
     }
@@ -192,5 +180,27 @@ public class MainActivity extends AppCompatActivity {
 
         FetchCsvTask fetchCsvTask = new FetchCsvTask(this);
         fetchCsvTask.execute();
+    }
+
+    private void registerLocationPreferencesListener(){
+
+        SharedPreferences sharedPref = getSharedPreferences(
+                getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
+
+        // Add a listener to watch for location changes and notify the adapter on change
+        mListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+            @Override
+            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                // Notify change only if the changed value is the selected location ID
+                if (key.equals(Utilities.LOCATION_SHAREDPREF_KEY)) {
+                    mAdapter.notifyDataSetChanged();
+                    if (locationListAdapter != null)
+                        locationListAdapter.notifyDataSetChanged();
+                }
+            }
+        };
+
+        // Register the SharedPreferences listener
+        sharedPref.registerOnSharedPreferenceChangeListener(mListener);
     }
 }

@@ -34,7 +34,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:layout_gravity="start"
-        android:background="@android:color/holo_blue_dark"
+        android:background="@android:color/white"
         android:id="@+id/drawer_content">
 
         <TextView

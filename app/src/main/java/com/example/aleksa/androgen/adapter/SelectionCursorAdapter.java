@@ -43,7 +43,7 @@ public class SelectionCursorAdapter extends SimpleCursorAdapter{
             String plantName = mCursor.getString(
                     mCursor.getColumnIndex(PlantEntry.COLUMN_NAME));
 
-            final int plantId = Utilities.getPlantIdFromSorted(position, mContext);
+            final int plantId = Utilities.getPlantIdFromSortedIndex(position, mContext);
 
             textView.setText(plantName.toUpperCase());
 

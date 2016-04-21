@@ -27,7 +27,7 @@ public class SlidingAdapter extends FragmentStatePagerAdapter{
     public Fragment getItem(int position) {
 
         // Find what plant ID goes to the given position
-        int plantID = Utilities.getPlantIdAtPosition(position, mContext);
+        int plantID = Utilities.getPlantIdAtPositionSorted(position, mContext);
 
         return FragmentMain.newInstance(plantID);
     }
