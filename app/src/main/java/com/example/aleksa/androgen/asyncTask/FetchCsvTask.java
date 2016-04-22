@@ -11,6 +11,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.example.aleksa.androgen.R;
+import com.example.aleksa.androgen.Utilities;
 import com.example.aleksa.androgen.data.PolenContract;
 
 import java.io.BufferedReader;
@@ -83,7 +84,9 @@ public class FetchCsvTask extends AsyncTask<Void, Void, Void> {
 
                 } while (queryPlants.moveToNext());
 
-                editor.commit();
+                editor.apply();
+
+                Utilities.setTotalPlantsNumber(queryPlants.getCount(), mContext);
             }
 
             queryPlants.close();

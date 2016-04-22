@@ -21,27 +21,30 @@ public class PolenProvider extends ContentProvider {
     // Unique values for matched types of URIs
     private static final int POLEN = 100;
     private static final int POLEN_WITH_LOCATION = 101;
-    private static final int POLEN_WITH_LOCATION_PLANT = 102;
-    private static final int POLEN_WITH_LOCATION_DATE_PLANT = 103;
+    private static final int POLEN_WITH_LOCATION_GROUPBY = 102;
+    private static final int POLEN_WITH_LOCATION_PLANT = 103;
+    private static final int POLEN_WITH_LOCATION_DATE_PLANT = 104;
     private static final int LOCATION = 200;
     private static final int LOCATION_WITH_ID = 201;
     private static final int PLANT = 300;
     private static final int PLANT_WITH_ID = 301;
 
+    private static final String JOINED_TABLES =
+            PolenEntry.TABLE_NAME + " INNER JOIN " + LocationEntry.TABLE_NAME
+                    + " ON " + PolenEntry.TABLE_NAME + "." + PolenEntry.COLUMN_LOCATION_ID + " = "
+                    + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_LOCATION_ID
+                    + " INNER JOIN " + PlantEntry.TABLE_NAME
+                    + " ON " + PolenEntry.TABLE_NAME + "." + PolenEntry.COLUMN_PLANT_ID + " = "
+                    + PlantEntry.TABLE_NAME + "." + PlantEntry.COLUMN_PLANT_ID;
+
     // This is a query builder for the three tables joined together
     private static final SQLiteQueryBuilder sPolenByLocationAndPlantQueryBuilder;
+
     // Initialization for the query builder
     static {
         sPolenByLocationAndPlantQueryBuilder = new SQLiteQueryBuilder();
         // Join the three tables accordingly (on plant and location IDs)
-        sPolenByLocationAndPlantQueryBuilder.setTables(
-                PolenEntry.TABLE_NAME + " INNER JOIN " + LocationEntry.TABLE_NAME
-                        + " ON " + PolenEntry.TABLE_NAME + "." + PolenEntry.COLUMN_LOCATION_ID + " = "
-                        + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_LOCATION_ID
-                        + " INNER JOIN " + PlantEntry.TABLE_NAME
-                        + " ON " + PolenEntry.TABLE_NAME + "." + PolenEntry.COLUMN_PLANT_ID + " = "
-                        + PlantEntry.TABLE_NAME + "." + PlantEntry.COLUMN_PLANT_ID
-        );
+        sPolenByLocationAndPlantQueryBuilder.setTables(JOINED_TABLES);
     }
 
     // AND keyword for SQL selection parameters
@@ -76,15 +79,16 @@ public class PolenProvider extends ContentProvider {
         final String authority = PolenContract.CONTENT_AUTHORITY;
 
         matcher.addURI(authority, PolenContract.PATH_POLEN, POLEN);
-        matcher.addURI(authority, PolenContract.PATH_POLEN + "/*", POLEN_WITH_LOCATION);
-        matcher.addURI(authority, PolenContract.PATH_POLEN + "/*/#", POLEN_WITH_LOCATION_PLANT);
-        matcher.addURI(authority, PolenContract.PATH_POLEN + "/*/#/*", POLEN_WITH_LOCATION_DATE_PLANT);
+        matcher.addURI(authority, PolenContract.PATH_POLEN + "/#", POLEN_WITH_LOCATION);
+        matcher.addURI(authority, PolenContract.PATH_POLEN + "/#/" + PolenContract.GROUP_BY, POLEN_WITH_LOCATION_GROUPBY);
+        matcher.addURI(authority, PolenContract.PATH_POLEN + "/#/#", POLEN_WITH_LOCATION_PLANT);
+        matcher.addURI(authority, PolenContract.PATH_POLEN + "/#/#/#", POLEN_WITH_LOCATION_DATE_PLANT);
 
         matcher.addURI(authority, PolenContract.PATH_LOCATION, LOCATION);
-        matcher.addURI(authority, PolenContract.PATH_LOCATION + "/*", LOCATION_WITH_ID);
+        matcher.addURI(authority, PolenContract.PATH_LOCATION + "/#", LOCATION_WITH_ID);
 
         matcher.addURI(authority, PolenContract.PATH_PLANT, PLANT);
-        matcher.addURI(authority, PolenContract.PATH_PLANT + "/*", PLANT_WITH_ID);
+        matcher.addURI(authority, PolenContract.PATH_PLANT + "/#", PLANT_WITH_ID);
 
         return matcher;
     }
@@ -157,6 +161,23 @@ public class PolenProvider extends ContentProvider {
             // polen/*/#
             case POLEN_WITH_LOCATION_PLANT: {
                 retCursor = getPolenLocationPlant(uri, projection, sortOrder);
+                break;
+            }
+
+            // polen/*/group
+            case POLEN_WITH_LOCATION_GROUPBY: {
+
+                String location = PolenContract.getLocationFromUri(uri);
+
+                retCursor = mOpenHelper.getReadableDatabase().rawQuery(
+                        "SELECT *, MAX(" + PolenEntry.COLUMN_DATE + ") "
+                                + "FROM " + JOINED_TABLES + " "
+                                + "WHERE " + PolenEntry.COLUMN_LOCATION_ID + " = ? "
+                                + "GROUP BY " + PolenEntry.COLUMN_PLANT_ID + " "
+                                + "ORDER BY " + sortOrder,
+                        new String[]{location}
+                );
+
                 break;
             }
 

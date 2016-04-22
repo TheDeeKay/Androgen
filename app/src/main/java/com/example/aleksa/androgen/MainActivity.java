@@ -4,9 +4,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -22,9 +26,11 @@ import com.example.aleksa.androgen.adapter.LocationListAdapter;
 import com.example.aleksa.androgen.adapter.SlidingAdapter;
 import com.example.aleksa.androgen.asyncTask.FetchCsvTask;
 import com.example.aleksa.androgen.asyncTask.FetchPolenTask;
+import com.example.aleksa.androgen.data.PolenContract;
 import com.example.aleksa.androgen.data.PolenContract.LocationEntry;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements LoaderManager.LoaderCallbacks<Cursor>{
 
     private static final String TAG = "MainActivity";
 
@@ -101,6 +107,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        getSupportLoaderManager().initLoader(0, null, this);
 
         registerLocationPreferencesListener();
     }
@@ -196,11 +204,37 @@ public class MainActivity extends AppCompatActivity {
                     mAdapter.notifyDataSetChanged();
                     if (locationListAdapter != null)
                         locationListAdapter.notifyDataSetChanged();
+                    getSupportLoaderManager().restartLoader(0, null, (MainActivity)mContext);
                 }
             }
         };
 
         // Register the SharedPreferences listener
         sharedPref.registerOnSharedPreferenceChangeListener(mListener);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        Uri queryUri = PolenContract.PolenEntry.buildPolenLocationGroupBy(
+            String.valueOf(Utilities.getPreferredLocation(mContext)));
+
+        String sortOrder = PolenContract.PolenEntry.COLUMN_PLANT_ID + " ASC ";
+
+        return new CursorLoader(mContext,
+                queryUri,
+                null,
+                null, null,
+                sortOrder);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mAdapter.swapCursor(null);
     }
 }

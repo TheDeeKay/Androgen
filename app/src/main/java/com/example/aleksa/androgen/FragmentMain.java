@@ -1,17 +1,11 @@
 package com.example.aleksa.androgen;
 
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.example.aleksa.androgen.data.PolenContract.PlantEntry;
-import com.example.aleksa.androgen.data.PolenContract.PolenEntry;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -20,7 +14,14 @@ import java.util.TimeZone;
 
 public class FragmentMain extends Fragment {
 
-    private static final String PLANT_ID = "plant_id";
+    public static final String PLANT_NAME = "plant_name";
+    public static final String CONCENTRATION = "concentration";
+    public static final String ENTRY_DATE = "date";
+
+    private static final int PLANT_INFO_LOADER = 1;
+    private static final int POLEN_INFO_LOADER = 2;
+
+    private ViewHolder mHolder;
 
     /*
     ViewHolder class for the views in the fragment
@@ -40,15 +41,29 @@ public class FragmentMain extends Fragment {
     }
 
     /*
-    Creates a new FragmentMain displaying the plant with plantID
+    Creates a new FragmentMain displaying the entry with the given info
      */
-    public static FragmentMain newInstance(int plantID) {
+    public static FragmentMain newInstance(String plantName, int concentration, long date) {
 
         Bundle args = new Bundle();
-        args.putInt(PLANT_ID ,plantID);
+        args.putString(PLANT_NAME ,plantName);
+        args.putInt(CONCENTRATION, concentration);
+        args.putLong(ENTRY_DATE, date);
 
         FragmentMain fragment = new FragmentMain();
         fragment.setArguments(args);
+        return fragment;
+    }
+
+    /*
+    Creates a fragment with default layout
+     */
+    public static FragmentMain newInstance(){
+
+        FragmentMain fragment = new FragmentMain();
+
+        fragment.setArguments(null);
+
         return fragment;
     }
 
@@ -62,95 +77,26 @@ public class FragmentMain extends Fragment {
                              Bundle savedInstanceState) {
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.fragment_main, container, false);
 
-        ViewHolder holder = new ViewHolder();
-        holder.plantName = (TextView) rootView.findViewById(R.id.plant_name);
-        holder.flavorText = (TextView) rootView.findViewById(R.id.flavor_text);
-        holder.statusText = (TextView) rootView.findViewById(R.id.status_text);
-        holder.percentageText = (TextView) rootView.findViewById(R.id.percentage_text);
+        mHolder = new ViewHolder();
+        mHolder.plantName = (TextView) rootView.findViewById(R.id.plant_name);
+        mHolder.flavorText = (TextView) rootView.findViewById(R.id.flavor_text);
+        mHolder.statusText = (TextView) rootView.findViewById(R.id.status_text);
+        mHolder.percentageText = (TextView) rootView.findViewById(R.id.percentage_text);
 
-        if (this.getArguments() != null) {
-            // Set the view contents using the arguments given
-            setViewContents(this.getArguments(), holder);
+        Bundle arguments = this.getArguments();
+
+        if (arguments != null){
+
+            mHolder.plantName.setText(arguments.getString(PLANT_NAME));
+
+            readResults(arguments.getInt(CONCENTRATION));
+
+            if (!isRecentDate(arguments.getLong(ENTRY_DATE))) {
+                // TODO warn that the data shown is not fresh
+            }
         }
 
         return rootView;
-    }
-
-    /*
-    Called to set the view contents to appropriate values when instantiating the fragment
-     */
-    private void setViewContents(Bundle arguments, ViewHolder holder){
-
-        // Get a URI that matches the plant with our ID
-        Uri plantIdUri = PlantEntry.buildPlantUri(arguments.getInt(PLANT_ID));
-
-        // Cursor containing the query results for plant table, should be a single plant with our ID
-        Cursor plant = getContext().getContentResolver().query(
-                plantIdUri,
-                null,
-                null,
-                null,
-                null);
-
-        // If there is a plant with such ID, set the text views to display its info
-        if (plant.moveToFirst()) {
-
-            holder.plantName.setText(plant.getString(plant.getColumnIndex(PlantEntry.COLUMN_NAME)));
-
-            int plantId = plant.getInt(plant.getColumnIndex(PlantEntry.COLUMN_PLANT_ID));
-
-            // Finally, set the flavor and percentage text
-            setFlavorAndPercentage(holder, plantId);
-        }
-
-        plant.close();
-
-    }
-
-    /*
-     Used to determine and set the percentage and flavor texts
-      */
-    private void setFlavorAndPercentage(ViewHolder holder, int plantId){
-
-        // Get today's midnight time
-        long midnightTime = getMidnightMillis();
-
-        int locationId = Utilities.getPreferredLocation(getContext());
-
-        // Now, create a Uri for querying the database, contains locationId and plantId
-        Uri queryUri = PolenEntry.buildPolenLocationPlant(String.valueOf(locationId), String.valueOf(plantId));
-
-        // Query the database for this locationId and plantId
-        Cursor queryResults = getContext().getContentResolver().query(
-                queryUri,
-                null,
-                null,
-                null,
-                PolenEntry.COLUMN_DATE + " DESC"
-        );
-
-        // Check whether there's results from the query
-        if (queryResults.moveToFirst()) {
-
-            readResults(holder, queryResults);
-
-            // Check whether the data is today's
-            // If not, trigger some warning
-            long queryDate =
-                    queryResults.getLong(queryResults.getColumnIndex(PolenEntry.COLUMN_DATE));
-            if (queryDate != midnightTime) {
-
-                // TODO display some warning that the data is not fresh
-
-            }
-        }
-        else {
-            // TODO remove later, just for testing purposes for now
-            Toast.makeText(getContext(), "Ma daj bre", Toast.LENGTH_LONG).show();
-        }
-
-        queryResults.close();
-
     }
 
     /*
@@ -182,9 +128,7 @@ public class FragmentMain extends Fragment {
     Auxiliary method for setFlavorAndPercentageText, so that changes to the process
     of reading the results and converting to text can be more easily changed
      */
-    private void readResults(ViewHolder holder, Cursor queryResults){
-
-        int concentration = queryResults.getInt(queryResults.getColumnIndex(PolenEntry.COLUMN_CONCENTRATION));
+    private void readResults(int concentration){
 
         String flavorText;
         String percentageText;
@@ -221,7 +165,19 @@ public class FragmentMain extends Fragment {
             }
         }
 
-        holder.flavorText.setText(flavorText);
-        holder.percentageText.setText(percentageText);
+        mHolder.flavorText.setText(flavorText);
+        mHolder.percentageText.setText(percentageText);
+    }
+
+    /*
+    A method that deals with checking whether the latest date in the DB is recent enough
+
+    Can change in the future if the updates to the online DB become more frequent
+     */
+    private boolean isRecentDate(long dataMillis){
+
+        long midnightMillis = getMidnightMillis();
+
+        return (dataMillis == midnightMillis);
     }
 }

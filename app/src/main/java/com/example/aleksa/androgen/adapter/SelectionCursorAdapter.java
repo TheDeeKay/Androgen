@@ -54,7 +54,7 @@ public class SelectionCursorAdapter extends SimpleCursorAdapter{
             textView.textWidth = bounds.width();
 
             // If it's not selected, we want it to be strikethrough
-            if (!Utilities.plantSelected(plantId, mContext)){
+            if (!Utilities.isPlantSelected(plantId, mContext)){
 //                textView.setPaintFlags(textView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
                 textView.strikeThrough = true;
                 textView.invalidate();
@@ -71,7 +71,7 @@ public class SelectionCursorAdapter extends SimpleCursorAdapter{
 
                     SelectionTextView text = (SelectionTextView) v;
 
-                    if (Utilities.plantSelected(plantId, mContext)){
+                    if (Utilities.isPlantSelected(plantId, mContext)){
 
 //                        text.setPaintFlags(text.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
                         text.strikeThrough = true;

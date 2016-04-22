@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
 
+import com.example.aleksa.androgen.data.PolenContract;
 import com.example.aleksa.androgen.data.PolenContract.LocationEntry;
 
 /*
@@ -18,20 +19,32 @@ public class Utilities {
     public static final String LOCATION_SHAREDPREF_KEY = "location_id";
     public static final int DEFAULT_LOCATION_ID = 1;
 
+    private static final String PLANTS_NUMBER_SHAREDPREF_KEY = "plants_number";
+
     public static final int SELECTED = 1;
     public static final int UNSELECTED = 0;
 
-    // Contains the total number of the plants in the DB
-    // Initialized to 25 as default, changed to correct number when the data is fetched
-    private static int totalPlantsNumber = 25;
+    /*
+    Gets the total number of plants in the database
+    This is changed when the .csv data fetch is executed
+     */
+    public static int getTotalPlantsNumber(Context context){
+
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                context.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
+
+        return sharedPref.getInt(PLANTS_NUMBER_SHAREDPREF_KEY, 1);
+    }
 
     /*
-    Sets the total number of plants in the database
-    This is called when the data fetch is executed
-    // TODO call this in fetch
+    Sets the total number of plants
      */
-    public static void setTotalPlantsNumber(int number){
-        totalPlantsNumber = number;
+    public static void setTotalPlantsNumber(int totalPlantsNumber, Context context){
+
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                context.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
+
+        sharedPref.edit().putInt(PLANTS_NUMBER_SHAREDPREF_KEY, totalPlantsNumber).commit();
     }
 
     /*
@@ -45,16 +58,14 @@ public class Utilities {
         );
 
         SharedPreferences.Editor editor = sharedPref.edit();
-
         editor.putInt(String.valueOf(plantId), selected);
-
         editor.commit();
     }
 
     /*
     Checks whether the plant is selected or not, given the plant ID
      */
-    public static boolean plantSelected(int plantID, Context context){
+    public static boolean isPlantSelected(int plantID, Context context){
 
         // Get a handle to the shared preferences containing info about plant selections
         // The values are stored as (String plantId, int selected)
@@ -94,7 +105,7 @@ public class Utilities {
     Gets the total number of currently selected plants
      */
     public static int plantsSelectedCount(Context context){
-        return plantsSelectedCount(totalPlantsNumber-1, context);
+        return plantsSelectedCount(getTotalPlantsNumber(context)-1, context);
     }
 
     /*
@@ -109,8 +120,8 @@ public class Utilities {
 
         int i;
 
-        for (i = 0; (i < totalPlantsNumber) && (position > -1); i++)
-            if (plantSelected(getPlantIdFromSortedIndex(i, context), context)) {
+        for (i = 0; (i < getTotalPlantsNumber(context)) && (position > -1); i++)
+            if (isPlantSelected(getPlantIdFromSortedIndex(i, context), context)) {
                 --position;
             }
 
@@ -194,6 +205,32 @@ public class Utilities {
         locations.close();
 
         return returnIndex;
+    }
+
+    public static String getPlantName(int plantId, Context context){
+
+        Uri queryUri = PolenContract.PlantEntry.buildPlantUri(plantId);
+
+        Cursor queryCursor = context.getContentResolver().query(
+                queryUri,
+                null,
+                null, null,
+                null
+        );
+
+        if (queryCursor.moveToFirst()){
+
+            String name = queryCursor.getString(
+                    queryCursor.getColumnIndex(PolenContract.PlantEntry.COLUMN_NAME));
+
+            queryCursor.close();
+
+            return name;
+        }
+
+        queryCursor.close();
+
+        return null;
     }
 
     /*

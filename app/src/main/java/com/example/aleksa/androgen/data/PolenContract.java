@@ -24,6 +24,8 @@ public class PolenContract {
     public static final String PATH_POLEN = "polen";
     public static final String PATH_LOCATION = "location";
 
+    public static final String GROUP_BY = "group";
+
     /*
     TODO
     Standardizes the date
@@ -72,10 +74,10 @@ public class PolenContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
-        // Returns URI referencing polen entry with the given location ID and plant ID
-        public static Uri buildPolenLocationWithPlant(String location, String plant){
-            return CONTENT_URI.buildUpon().appendPath(location).
-                    appendPath(plant).build();
+        // Returns a URI referencing polen entry with the given location ID and plant ID
+        public static Uri buildPolenLocationPlant(String location, String plant){
+            return CONTENT_URI.buildUpon().
+                    appendPath(location).appendPath(plant).build();
         }
 
         // Returns URI referencing polen entry with the given location, date, and plant
@@ -90,10 +92,9 @@ public class PolenContract {
             return CONTENT_URI.buildUpon().appendPath(location).build();
         }
 
-        // Returns a URI referencing polen entry with the given location ID and plant ID
-        public static Uri buildPolenLocationPlant(String location, String plant){
-            return CONTENT_URI.buildUpon().
-                    appendPath(location).appendPath(plant).build();
+        // Returns a URI referencing polen entries with the given location ID, grouped by plant ID
+        public static Uri buildPolenLocationGroupBy(String location){
+            return CONTENT_URI.buildUpon().appendPath(location).appendPath(GROUP_BY).build();
         }
 
     }
