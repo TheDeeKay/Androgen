@@ -19,6 +19,7 @@
             android:layout_height="wrap_content"
             android:src="@drawable/drawer_image"
             android:background="@android:color/transparent"
+            android:layout_marginTop="10dp"
             android:id="@+id/location_button"/>
 
         <android.support.design.widget.FloatingActionButton
