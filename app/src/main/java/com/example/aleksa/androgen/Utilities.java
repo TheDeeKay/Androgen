@@ -20,6 +20,10 @@ public class Utilities {
     public static final int DEFAULT_LOCATION_ID = 1;
 
     private static final String PLANTS_NUMBER_SHAREDPREF_KEY = "plants_number";
+    private static final String FIRST_LAUNCH_SHAREDPREF_KEY = "first_launch";
+
+    private static final int FIRST_LAUNCH = 0;
+    private static final int SUBSEQUENT_LAUNCH = 1;
 
     public static final int SELECTED = 1;
     public static final int UNSELECTED = 0;
@@ -33,18 +37,15 @@ public class Utilities {
         SharedPreferences sharedPref = context.getSharedPreferences(
                 context.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
 
-        return sharedPref.getInt(PLANTS_NUMBER_SHAREDPREF_KEY, 1);
+        return sharedPref.getInt(PLANTS_NUMBER_SHAREDPREF_KEY, 25);
     }
 
     /*
     Sets the total number of plants
      */
-    public static void setTotalPlantsNumber(int totalPlantsNumber, Context context){
+    public static void setTotalPlantsNumber(int totalPlantsNumber, SharedPreferences sharedPref){
 
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                context.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
-
-        sharedPref.edit().putInt(PLANTS_NUMBER_SHAREDPREF_KEY, totalPlantsNumber).commit();
+        sharedPref.edit().putInt(PLANTS_NUMBER_SHAREDPREF_KEY, totalPlantsNumber).apply();
     }
 
     /*
@@ -59,7 +60,7 @@ public class Utilities {
 
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putInt(String.valueOf(plantId), selected);
-        editor.commit();
+        editor.apply();
     }
 
     /*
@@ -71,7 +72,7 @@ public class Utilities {
         // The values are stored as (String plantId, int selected)
         // selected values are 0 and 1 (1 for selected, 0 for unselected)
         SharedPreferences sharedPref = context.getSharedPreferences(
-                context.getString(R.string.shared_pref_plants), context.MODE_PRIVATE
+                context.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE
         );
 
         return (sharedPref.getInt(Integer.toString(plantID), SELECTED) == SELECTED);
@@ -87,7 +88,7 @@ public class Utilities {
         // selected values are 0 and 1 (0 for selected, 1 for unselected)
         // It also holds the information for the selected location
         SharedPreferences sharedPref = context.getSharedPreferences(
-                context.getString(R.string.shared_pref_plants), context.MODE_PRIVATE
+                context.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE
         );
 
         // Count the selected plants
@@ -241,6 +242,23 @@ public class Utilities {
         SharedPreferences sharedPref = context.getSharedPreferences(
                 context.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
 
-        sharedPref.edit().putInt(LOCATION_SHAREDPREF_KEY, locationId).commit();
+        sharedPref.edit().putInt(LOCATION_SHAREDPREF_KEY, locationId).apply();
+    }
+
+
+    /*
+    Determines if this is the first launch, using a field in shared preferences
+    If it's the first launch, it sets the field to indicate that the app has been launched already
+     */
+    public static boolean isFirstLaunch(Context context){
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                context.getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
+
+        if (sharedPref.getInt(FIRST_LAUNCH_SHAREDPREF_KEY, FIRST_LAUNCH) == FIRST_LAUNCH) {
+            sharedPref.edit().putInt(FIRST_LAUNCH_SHAREDPREF_KEY, SUBSEQUENT_LAUNCH).apply();
+            return true;
+        }
+        else
+            return false;
     }
 }

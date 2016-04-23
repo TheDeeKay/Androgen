@@ -1,6 +1,7 @@
 package com.example.aleksa.androgen.asyncTask;
 
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -19,15 +20,32 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+// Singleton
 public class FetchCsvTask extends AsyncTask<Void, Void, Void> {
 
     private static final String LOG_TAG = FetchCsvTask.class.getSimpleName();
     private static final String CSV_PLANTS_PATH = "vrste polena.csv";
     private static final String CSV_LOCATIONS_PATH = "lokacije Stanica Polen.csv";
-    private final Context mContext;
 
-    public FetchCsvTask(Context context){
-        mContext = context;
+    private SharedPreferences plantsSharedPref;
+    private ContentResolver mContentResolver;
+    private AssetManager mAssetManager;
+
+    private static FetchCsvTask instance;
+
+    public static FetchCsvTask getInstance(Context context){
+
+        if (instance == null)
+            instance = new FetchCsvTask(context);
+
+        return instance;
+    }
+
+    protected FetchCsvTask(Context context){
+        plantsSharedPref = context.getSharedPreferences(
+                context.getString(R.string.shared_pref_sorted_ids), Context.MODE_PRIVATE);
+        mContentResolver = context.getContentResolver();
+        mAssetManager = context.getAssets();
     }
 
     /*
@@ -59,7 +77,7 @@ public class FetchCsvTask extends AsyncTask<Void, Void, Void> {
             }
 
             // After inserting, fill the sharedpref for sorted plant indexes
-            Cursor queryPlants = mContext.getContentResolver().query(
+            Cursor queryPlants = mContentResolver.query(
                     PolenContract.PlantEntry.CONTENT_URI,
                     null,
                     null, null,
@@ -68,10 +86,7 @@ public class FetchCsvTask extends AsyncTask<Void, Void, Void> {
 
             if (queryPlants.moveToFirst()){
 
-                SharedPreferences sharedPref = mContext.getSharedPreferences(
-                        mContext.getString(R.string.shared_pref_sorted_ids), Context.MODE_PRIVATE
-                );
-                SharedPreferences.Editor editor = sharedPref.edit();
+                SharedPreferences.Editor editor = plantsSharedPref.edit();
 
                 do {
 
@@ -86,7 +101,7 @@ public class FetchCsvTask extends AsyncTask<Void, Void, Void> {
 
                 editor.apply();
 
-                Utilities.setTotalPlantsNumber(queryPlants.getCount(), mContext);
+                Utilities.setTotalPlantsNumber(queryPlants.getCount(), plantsSharedPref);
             }
 
             queryPlants.close();
@@ -113,7 +128,7 @@ public class FetchCsvTask extends AsyncTask<Void, Void, Void> {
         cv.put(PolenContract.PlantEntry.COLUMN_PLANT_ALLERGENIC_INDEX, plant_allergenic_index);
 
         // Insert the ContentValues object in the correct table
-        mContext.getContentResolver().insert(uri, cv);
+        mContentResolver.insert(uri, cv);
 
     }
 
@@ -144,7 +159,7 @@ public class FetchCsvTask extends AsyncTask<Void, Void, Void> {
         cv.put(PolenContract.LocationEntry.COLUMN_LATITUDE, latitude);
 
         // Insert the ContentValues object in the correct table
-        mContext.getContentResolver().insert(uri, cv);
+        mContentResolver.insert(uri, cv);
     }
 
     @Override
@@ -153,18 +168,17 @@ public class FetchCsvTask extends AsyncTask<Void, Void, Void> {
         // TODO re-download .csv in the future, currently unsafe because of bad data in them
         // Attempt to parse the .csv files containing the locations and plants data
         // First, get an AssetManager and an input stream for csv
-        AssetManager assetManager = mContext.getAssets();
         InputStream csvInputStream = null;
 
         // Attempt to open the .csv files
         try {
 
             // Open and parse the plants .csv
-            csvInputStream = assetManager.open(CSV_PLANTS_PATH);
+            csvInputStream = mAssetManager.open(CSV_PLANTS_PATH);
             parseCsv(csvInputStream, PolenContract.PlantEntry.CONTENT_URI);
 
             // Open and parse the locations .csv
-            csvInputStream = assetManager.open(CSV_LOCATIONS_PATH);
+            csvInputStream = mAssetManager.open(CSV_LOCATIONS_PATH);
             parseCsv(csvInputStream, PolenContract.LocationEntry.CONTENT_URI);
 
         } catch (IOException e) {
@@ -179,6 +193,9 @@ public class FetchCsvTask extends AsyncTask<Void, Void, Void> {
                 Log.e(LOG_TAG, "Error closing the .csv input stream", e);
             }
         }
+
+        instance = null;
+
         return null;
     }
 }

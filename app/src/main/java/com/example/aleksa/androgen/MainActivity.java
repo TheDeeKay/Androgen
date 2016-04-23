@@ -4,7 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.support.design.widget.FloatingActionButton;
@@ -21,6 +25,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.aleksa.androgen.adapter.LocationListAdapter;
 import com.example.aleksa.androgen.adapter.SlidingAdapter;
@@ -38,6 +43,7 @@ public class MainActivity extends AppCompatActivity
     private Context mContext;
     private LocationTracker mLocationTracker = null;
     private LocationListAdapter locationListAdapter;
+    private Toast toast;
 
     // Hold a reference to the sharedPref listener, otherwise it gets GCed
     private SharedPreferences.OnSharedPreferenceChangeListener mListener;
@@ -50,7 +56,8 @@ public class MainActivity extends AppCompatActivity
         mContext = this;
 
         // Fetch the data from .csv files and from the server, if possible and adequate
-        fetchData();
+        if (savedInstanceState == null)
+            fetchData();
 
         // Get a reference to the DrawerLayout and set its scrim color
         final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_main);
@@ -108,6 +115,15 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        // Set onClickListener to the refresh button
+        ImageButton refreshButton = (ImageButton) findViewById(R.id.refresh_button);
+        refreshButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                fetchData();
+            }
+        });
+
         getSupportLoaderManager().initLoader(0, null, this);
 
         registerLocationPreferencesListener();
@@ -115,6 +131,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onResume() {
+        // This is needed so that the slider reflects the changes made in selection activity
         mAdapter.notifyDataSetChanged();
         super.onResume();
     }
@@ -124,8 +141,10 @@ public class MainActivity extends AppCompatActivity
         // Unregister the SharedPreferences listener
         SharedPreferences sharedPreferences = getSharedPreferences(
                 getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
-
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(mListener);
+
+        if (!locationListAdapter.getCursor().isClosed())
+            locationListAdapter.getCursor().close();
 
         super.onStop();
     }
@@ -134,40 +153,43 @@ public class MainActivity extends AppCompatActivity
     protected void onRestart() {
         super.onRestart();
 
+        // Re-register the location sharedPref listener
         SharedPreferences sharedPref = getSharedPreferences(
                 getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
-
         sharedPref.registerOnSharedPreferenceChangeListener(mListener);
     }
 
     /*
-        Attaches a SimpleCursorAdapter to the given location ListView
+                Attaches a SimpleCursorAdapter to the given location ListView
 
-        Also attaches OnClickListener to all the items in the list to modify the selected location
-         */
+                Also attaches OnClickListener to all the items in the list to modify the selected location
+                 */
     private void setLocationListAdapter(final ListView locationList){
 
-        // Get a cursor containing all of our locations
-        Cursor locationCursor = getContentResolver().query(
-                LocationEntry.CONTENT_URI,
-                new String[]{
-                        LocationEntry.COLUMN_LOCATION_ID + " AS " + BaseColumns._ID,
-                        LocationEntry.COLUMN_NAME},
-                null, null,
-                LocationEntry.COLUMN_LOCATION_ID + " ASC"
-        );
+        if (locationListAdapter == null) {
 
-        locationCursor.moveToFirst();
+            // Get a cursor containing all of our locations
+            Cursor locationCursor = getContentResolver().query(
+                    LocationEntry.CONTENT_URI,
+                    new String[]{
+                            LocationEntry.COLUMN_LOCATION_ID + " AS " + BaseColumns._ID,
+                            LocationEntry.COLUMN_NAME},
+                    null, null,
+                    LocationEntry.COLUMN_LOCATION_ID + " ASC"
+            );
 
-        // Create a simple cursor adapter with our locations cursor and set it to the drawer list
-        locationListAdapter = new LocationListAdapter(
-                this,
-                R.layout.location_selection_list_item,
-                locationCursor,
-                new String[]{LocationEntry.COLUMN_NAME},
-                new int[]{R.id.item_location_selection},
-                0,
-                locationList);
+            locationCursor.moveToFirst();
+
+            // Create a simple cursor adapter with our locations cursor and set it to the drawer list
+            locationListAdapter = new LocationListAdapter(
+                    this,
+                    R.layout.location_selection_list_item,
+                    locationCursor,
+                    new String[]{LocationEntry.COLUMN_NAME},
+                    new int[]{R.id.item_location_selection},
+                    0,
+                    locationList);
+        }
         locationList.setAdapter(locationListAdapter);
 
         locationList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -180,14 +202,42 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void fetchData(){
-        // TODO trigger under appropriate conditions
-        // If it's the first launch, set a delay after this so it finishes the fetch first
-        // Check if there's internet connection, and move this somewhere else so it doesn't cancel
-        FetchPolenTask fetchPolenTask = new FetchPolenTask(this);
-        fetchPolenTask.execute();
+        // TODO Move this somewhere else so it doesn't cancel
 
-        FetchCsvTask fetchCsvTask = new FetchCsvTask(this);
-        fetchCsvTask.execute();
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+
+        if (networkInfo != null && networkInfo.isConnected()) {
+
+            FetchPolenTask fetchPolenTask = FetchPolenTask.getInstance(mContext);
+
+            if (!(fetchPolenTask.getStatus() == AsyncTask.Status.RUNNING)) {
+                fetchPolenTask.execute();
+                showFetchToast("Ažuriranje...");
+            }
+            else
+                showFetchToast("Ažuriranje je već u toku.");
+
+        }
+        else
+            showFetchToast("Nema internet konekcije, ažuriranje neuspelo.");
+
+        if (Utilities.isFirstLaunch(this)) {
+            FetchCsvTask fetchCsvTask = FetchCsvTask.getInstance(this);
+            fetchCsvTask.execute();
+        }
+    }
+
+    private void showFetchToast(String message){
+        if (toast != null)
+            toast.cancel();
+
+        boolean condition = Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB;
+        if ((toast == null && condition) || !condition)
+            toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
+        if ((toast != null && condition))
+            toast.setText(message);
+        toast.show();
     }
 
     private void registerLocationPreferencesListener(){

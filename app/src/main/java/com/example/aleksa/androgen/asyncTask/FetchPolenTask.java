@@ -1,11 +1,14 @@
 package com.example.aleksa.androgen.asyncTask;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.example.aleksa.androgen.MainActivity;
 import com.example.aleksa.androgen.R;
 import com.example.aleksa.androgen.data.PolenContract.PolenEntry;
 
@@ -17,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.ParseException;
@@ -24,14 +28,35 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-
+// Singleton
 public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
 
     private static final String LOG_TAG = FetchPolenTask.class.getSimpleName();
-    private final Context mContext;
+    private ContentResolver mContentResolver;
 
-    public FetchPolenTask(Context context){
-        mContext = context;
+    private final String POLEN_BASE_URL;
+    private final String RESOURCE_POLEN;
+
+    WeakReference<MainActivity> mainActivity;
+
+    private static FetchPolenTask instance;
+
+    public static FetchPolenTask getInstance(Context context){
+
+        if (instance == null)
+            instance = new FetchPolenTask(context);
+
+        return instance;
+    }
+
+    protected FetchPolenTask(Context context){
+
+        mContentResolver = context.getContentResolver();
+        POLEN_BASE_URL = context.getString(R.string.data_sepa_gov);
+        RESOURCE_POLEN = context.getString(R.string.polen_json_id);
+
+        mainActivity = new WeakReference<MainActivity>((MainActivity) context);
+
     }
 
     /*
@@ -110,7 +135,7 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
             if (cVVector.size() > 0){
                 ContentValues[] contents = new ContentValues[cVVector.size()];
                 cVVector.toArray(contents);
-                inserted = mContext.getContentResolver().bulkInsert(PolenEntry.CONTENT_URI, contents);
+                inserted = mContentResolver.bulkInsert(PolenEntry.CONTENT_URI, contents);
             }
             else {
                 Log.e(LOG_TAG, "The CVVector is empty.");
@@ -161,13 +186,10 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
         try{
 
             // Strings that serve for building the query
-            final String POLEN_BASE_URL = mContext.getString(R.string.data_sepa_gov);
             final String RESOURCE_PARAM = "resource_id";
             final String SORT_PARAM = "sort";
             final String FILTER_LOCATION_PARAM = "filters[ID_LOKACIJE]";
 
-            // Resource IDs for different tables
-            final String RESOURCE_POLEN = mContext.getString(R.string.polen_json_id);
             // Sort order, in this case sorted by date descending
             final String SORT_BY_DATE = "(DATUM desc)";
             // Construct the Uri for querying the remote database
@@ -230,5 +252,13 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
         }}
 
         return null;
+    }
+
+    @Override
+    protected void onPostExecute(Void aVoid) {
+        instance = null;
+        if (mainActivity.get() != null)
+            Toast.makeText(mainActivity.get(), "Ažuriranje završeno.", Toast.LENGTH_SHORT).show();
+        super.onPostExecute(aVoid);
     }
 }

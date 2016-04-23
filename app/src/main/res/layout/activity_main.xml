@@ -22,6 +22,15 @@
             android:layout_marginTop="10dp"
             android:id="@+id/location_button"/>
 
+        <ImageButton
+            android:id="@+id/refresh_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/refresh_image"/>
+
         <android.support.design.widget.FloatingActionButton
             style="@style/Widget.Design.FloatingActionButton.Selection"
             app:backgroundTint="@android:color/white"
