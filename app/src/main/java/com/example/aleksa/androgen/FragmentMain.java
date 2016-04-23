@@ -1,7 +1,9 @@
 package com.example.aleksa.androgen;
 
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +23,8 @@ public class FragmentMain extends Fragment {
     private static final int PLANT_INFO_LOADER = 1;
     private static final int POLEN_INFO_LOADER = 2;
 
+    private static float screenWidth = 0;
+
     private ViewHolder mHolder;
 
     /*
@@ -30,7 +34,6 @@ public class FragmentMain extends Fragment {
 
         TextView plantName;
         TextView flavorText;
-        TextView statusText;
         TextView percentageText;
 
     }
@@ -80,8 +83,10 @@ public class FragmentMain extends Fragment {
         mHolder = new ViewHolder();
         mHolder.plantName = (TextView) rootView.findViewById(R.id.plant_name);
         mHolder.flavorText = (TextView) rootView.findViewById(R.id.flavor_text);
-        mHolder.statusText = (TextView) rootView.findViewById(R.id.status_text);
         mHolder.percentageText = (TextView) rootView.findViewById(R.id.percentage_text);
+
+        if (screenWidth == 0)
+            screenWidth = getResources().getDisplayMetrics().widthPixels;
 
         Bundle arguments = this.getArguments();
 
@@ -131,41 +136,70 @@ public class FragmentMain extends Fragment {
     private void readResults(int concentration){
 
         String flavorText;
-        String percentageText;
+        int percentage;
+        int color = R.color.white;
 
         switch (concentration) {
 
             case 0: {
                 flavorText = "Suri bre, havarija";
-                percentageText = "0%";
+                percentage = 0;
+                color = R.color.status_good;
                 break;
             }
 
             case 1: {
                 flavorText = "Tu i tamo, bedak";
-                percentageText = "33%";
+                percentage = 33;
+                color = R.color.status_neutral;
                 break;
             }
 
             case 2: {
                 flavorText = "Samo se pazi, ja cu ti alergiju poslat";
-                percentageText = "66%";
+                percentage = 66;
+                color = R.color.status_bad;
                 break;
             }
 
             case 3: {
                 flavorText = "Kataklizma, fort djeded";
-                percentageText = "100%";
+                percentage = 100;
+                color = R.color.themeColor;
                 break;
             }
 
             default: {
                 flavorText = "Nesto ne valja";
-                percentageText = "-9001%";
+                percentage = -9001;
             }
         }
 
         mHolder.flavorText.setText(flavorText);
+        setPercentageText(percentage);
+        mHolder.plantName.getRootView().setBackgroundColor(ContextCompat.getColor(getContext(), color));
+    }
+
+    private void setPercentageText(int percentage){
+
+        String percentageText = percentage + "%";
+
+        Rect bounds = new Rect();
+
+        // Get the bounds for the text inside this textView
+        mHolder.percentageText.getPaint().getTextBounds(
+                percentageText,
+                0, percentageText.length(),
+                bounds);
+
+        // Get the scale for X axis that should be used to scale the text to fill the width
+        float scaleX = screenWidth / bounds.width();
+
+        // If percentage has single digit, it shouldn't be scaled fully
+        if (percentage < 10)
+            scaleX = (float) (scaleX * 0.8);
+
+        mHolder.percentageText.setScaleX(scaleX);
         mHolder.percentageText.setText(percentageText);
     }
 

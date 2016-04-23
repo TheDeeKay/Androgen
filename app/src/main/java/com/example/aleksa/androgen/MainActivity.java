@@ -180,7 +180,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void fetchData(){
-        // TODO set a listener to this. Also, trigger under appropriate conditions
+        // TODO trigger under appropriate conditions
         // If it's the first launch, set a delay after this so it finishes the fetch first
         // Check if there's internet connection, and move this somewhere else so it doesn't cancel
         FetchPolenTask fetchPolenTask = new FetchPolenTask(this);

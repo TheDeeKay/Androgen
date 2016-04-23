@@ -4,4 +4,8 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="themeColor">#8E24AA</color>
+    <color name="status_good">#32DDB0</color>
+    <color name="status_neutral">#96DDFF</color>
+    <color name="status_bad">#9862DB</color>
+    <color name="white">#FFFFFF</color>
 </resources>
