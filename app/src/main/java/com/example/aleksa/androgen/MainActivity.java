@@ -39,6 +39,9 @@ public class MainActivity extends AppCompatActivity
 
     private static final String TAG = "MainActivity";
 
+    private static final int LOCATION_LOADER = 0;
+    private static final int POLEN_LOADER = 1;
+
     private SlidingAdapter mAdapter;
     private Context mContext;
     private LocationTracker mLocationTracker = null;
@@ -90,7 +93,7 @@ public class MainActivity extends AppCompatActivity
         detectLocationView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mLocationTracker == null)
+//                if (mLocationTracker == null)
                     mLocationTracker = new LocationTracker(mContext);
 
                 // Check if the mLocationTracker is already connected or connecting
@@ -124,7 +127,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        getSupportLoaderManager().initLoader(0, null, this);
+        getSupportLoaderManager().initLoader(POLEN_LOADER, null, this);
 
         registerLocationPreferencesListener();
     }
@@ -142,9 +145,6 @@ public class MainActivity extends AppCompatActivity
         SharedPreferences sharedPreferences = getSharedPreferences(
                 getString(R.string.shared_pref_plants), Context.MODE_PRIVATE);
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(mListener);
-
-        if (!locationListAdapter.getCursor().isClosed())
-            locationListAdapter.getCursor().close();
 
         super.onStop();
     }
@@ -168,29 +168,19 @@ public class MainActivity extends AppCompatActivity
 
         if (locationListAdapter == null) {
 
-            // Get a cursor containing all of our locations
-            Cursor locationCursor = getContentResolver().query(
-                    LocationEntry.CONTENT_URI,
-                    new String[]{
-                            LocationEntry.COLUMN_LOCATION_ID + " AS " + BaseColumns._ID,
-                            LocationEntry.COLUMN_NAME},
-                    null, null,
-                    LocationEntry.COLUMN_LOCATION_ID + " ASC"
-            );
-
-            locationCursor.moveToFirst();
-
             // Create a simple cursor adapter with our locations cursor and set it to the drawer list
             locationListAdapter = new LocationListAdapter(
                     this,
                     R.layout.location_selection_list_item,
-                    locationCursor,
+                    null,
                     new String[]{LocationEntry.COLUMN_NAME},
                     new int[]{R.id.item_location_selection},
                     0,
                     locationList);
         }
         locationList.setAdapter(locationListAdapter);
+
+        getSupportLoaderManager().initLoader(LOCATION_LOADER, null, this);
 
         locationList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -251,10 +241,12 @@ public class MainActivity extends AppCompatActivity
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
                 // Notify change only if the changed value is the selected location ID
                 if (key.equals(Utilities.LOCATION_SHAREDPREF_KEY)) {
-                    mAdapter.notifyDataSetChanged();
+
                     if (locationListAdapter != null)
                         locationListAdapter.notifyDataSetChanged();
-                    getSupportLoaderManager().restartLoader(0, null, (MainActivity)mContext);
+
+                    getSupportLoaderManager().restartLoader(
+                            POLEN_LOADER, null, (MainActivity)mContext);
                 }
             }
         };
@@ -266,25 +258,70 @@ public class MainActivity extends AppCompatActivity
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
-        Uri queryUri = PolenContract.PolenEntry.buildPolenLocationGroupBy(
-            String.valueOf(Utilities.getPreferredLocation(mContext)));
+        switch (id) {
 
-        String sortOrder = PolenContract.PolenEntry.COLUMN_PLANT_ID + " ASC ";
+            case POLEN_LOADER: {
+                Uri queryUri = PolenContract.PolenEntry.buildPolenLocationGroupBy(
+                        String.valueOf(Utilities.getPreferredLocation(mContext)));
 
-        return new CursorLoader(mContext,
-                queryUri,
-                null,
-                null, null,
-                sortOrder);
+
+                String sortOrder = PolenContract.PolenEntry.COLUMN_PLANT_ID + " ASC ";
+
+                return new CursorLoader(mContext,
+                        queryUri,
+                        null,
+                        null, null,
+                        sortOrder);
+            }
+
+            case LOCATION_LOADER: {
+
+                Uri queryUri = LocationEntry.CONTENT_URI;
+                String sortOrder = LocationEntry.COLUMN_LOCATION_ID + " ASC ";
+
+                return new CursorLoader(mContext,
+                        queryUri,
+                        new String[]{
+                                LocationEntry.COLUMN_LOCATION_ID + " AS " + BaseColumns._ID,
+                                LocationEntry.COLUMN_NAME},
+                        null, null,
+                        sortOrder);
+            }
+
+            default: return null;
+        }
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        mAdapter.swapCursor(data);
+
+        switch (loader.getId()){
+
+            case POLEN_LOADER: {
+                mAdapter.swapCursor(data);
+                return;
+            }
+
+            case LOCATION_LOADER: {
+                locationListAdapter.swapCursor(data);
+            }
+        }
+
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        mAdapter.swapCursor(null);
+
+        switch (loader.getId()){
+
+            case POLEN_LOADER: {
+                mAdapter.swapCursor(null);
+                return;
+            }
+
+            case LOCATION_LOADER: {
+                locationListAdapter.swapCursor(null);
+            }
+        }
     }
 }

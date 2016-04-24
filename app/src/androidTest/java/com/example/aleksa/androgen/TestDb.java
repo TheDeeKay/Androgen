@@ -50,10 +50,10 @@ public class TestDb extends AndroidTestCase{
         // If the tableNames hashSet is not empty, it means that not all the tables are open
         assertTrue("Error: not all the tables are open.", tableNames.isEmpty());
 
-        FetchPolenTask fetchPolenTask = new FetchPolenTask(getContext());
+        FetchPolenTask fetchPolenTask = FetchPolenTask.getInstance(getContext());
         fetchPolenTask.execute();
 
-        FetchCsvTask fetchCsvTask = new FetchCsvTask(getContext());
+        FetchCsvTask fetchCsvTask = FetchCsvTask.getInstance(getContext());
         fetchCsvTask.execute();
 
         ContentValues cv = new ContentValues();
