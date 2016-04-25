@@ -159,11 +159,17 @@ public class MainActivity extends AppCompatActivity
         sharedPref.registerOnSharedPreferenceChangeListener(mListener);
     }
 
-    /*
-                Attaches a SimpleCursorAdapter to the given location ListView
+    @Override
+    protected void onDestroy() {
+        mAdapter.mContext = null;
+        super.onDestroy();
+    }
 
-                Also attaches OnClickListener to all the items in the list to modify the selected location
-                 */
+    /*
+                    Attaches a SimpleCursorAdapter to the given location ListView
+
+                    Also attaches OnClickListener to all the items in the list to modify the selected location
+                     */
     private void setLocationListAdapter(final ListView locationList){
 
         if (locationListAdapter == null) {

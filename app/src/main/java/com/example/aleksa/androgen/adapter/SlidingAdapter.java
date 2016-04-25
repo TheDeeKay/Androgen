@@ -18,7 +18,7 @@ Pages FragmentMain
 public class SlidingAdapter extends FragmentStatePagerAdapter{
 
     // Member variable for storing the context in which the adapter is used
-    private Context mContext;
+    public Context mContext;
 
     // A cursor from which we draw the data for fragments
     private Cursor mCursor;
@@ -61,6 +61,7 @@ public class SlidingAdapter extends FragmentStatePagerAdapter{
 
     public void swapCursor(Cursor cursor){
         mCursor = cursor;
-        notifyDataSetChanged();
+        if (mContext != null)
+            notifyDataSetChanged();
     }
 }
