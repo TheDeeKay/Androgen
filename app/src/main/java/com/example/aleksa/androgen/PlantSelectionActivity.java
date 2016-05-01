@@ -26,9 +26,13 @@ import static io.codetail.animation.ViewAnimationUtils.createCircularReveal;
 public class PlantSelectionActivity extends AppCompatActivity
 implements LoaderManager.LoaderCallbacks<Cursor>{
 
+    private static final String TAG = "PlantSelectionActivity";
+
     private SelectionCursorAdapter mAdapter;
 
     private final static int ANIMATION_DURATION = 1000;
+    private final static int ANIMATION_GROW = 0;
+    private final static int ANIMATION_SHRINK = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +69,7 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
                     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
                     @Override
                     public void onGlobalLayout() {
-                        revealAnimation(rLayout, floatingAB, ANIMATION_DURATION);
+                        revealAnimation(rLayout, floatingAB);
                         rLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                     }
                 });
@@ -100,13 +104,8 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
         mAdapter.swapCursor(null);
     }
 
-
-    // TODO there's still a bug in the animator
-    // if it's started and then clicked 2 times before it finishes
-    private void revealAnimation(final View mainView, final FloatingActionButton fAB, int time){
-
+    private void revealAnimation(View mainView, FloatingActionButton fAB){
         int[] center = new int[2];
-
         getFABLocation(fAB, center);
 
         int cx = center[0];
@@ -115,88 +114,36 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
         int dx = Math.max(mainView.getWidth() - cx, cx);
         int dy = Math.max(mainView.getHeight() - cy, cy);
 
-        float initialRadius = (float) (fAB.getWidth() / 2.0);
+        final float initialRadius = (float) (fAB.getWidth() / 2.0);
+        final float finalRadius = (float) Math.hypot(dx, dy);
 
-        float finalRadius = (float) Math.hypot(dx, dy);
-
-        initialRadius = initialRadius +
-                (finalRadius - initialRadius) * (ANIMATION_DURATION -time) / ANIMATION_DURATION;
-
-        final SupportAnimator animator =
-                createCircularReveal(mainView, cx, cy, initialRadius, finalRadius);
-
-        animator.setDuration(time);
-
-        final long startTime = System.currentTimeMillis();
-
-        animator.addListener(new SupportAnimator.AnimatorListener() {
-
-            boolean wasCancelled = false;
-
-            @Override
-            public void onAnimationStart() {
-                if (Build.VERSION.SDK_INT >= 21)
-                    fAB.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            animator.cancel();
-                        }
-                    });
-                else
-                    fAB.setOnClickListener(null);
-            }
-
-            @Override
-            public void onAnimationEnd() {
-                if (!wasCancelled)
-                    fAB.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            hideAnimation(mainView, fAB, ANIMATION_DURATION);
-                        }
-                    });
-            }
-
-            @Override
-            public void onAnimationCancel() {
-                wasCancelled = true;
-                hideAnimation(
-                        mainView, fAB, (int) (System.currentTimeMillis() - startTime));
-            }
-
-            @Override
-            public void onAnimationRepeat() {
-
-            }
-        });
-
-        mainView.setVisibility(View.VISIBLE);
-
-        animator.start();
+        revealAnimation(mainView, fAB, ANIMATION_GROW, cx, cy,
+                initialRadius, finalRadius, initialRadius);
     }
 
-    private void hideAnimation(final View mainView, final FloatingActionButton fAB, int time){
+    private void revealAnimation(
+            final View mainView, final FloatingActionButton fAB, final int direction,
+            final int centerX, final int centerY,
+            final float initialRadius, final float finalRadius, final float currentRadius){
 
-        int[] center = new int[2];
-        getFABLocation(fAB, center);
+        final float endRadius;
+        float startRadius;
+        if (direction == ANIMATION_GROW) {
+            endRadius = finalRadius;
+            startRadius = initialRadius;
+        }
+        else {
+            endRadius = initialRadius;
+            startRadius = finalRadius;
+        }
 
-        int cx = center[0];
-        int cy = center[1];
+        final SupportAnimator animator = createCircularReveal(
+                mainView, centerX, centerY, currentRadius, endRadius);
 
-        int dx = Math.max(mainView.getWidth() - cx, cx);
-        int dy = Math.max(mainView.getHeight() - cy, cy);
+        double progress = Math.abs((startRadius - currentRadius) / (finalRadius - initialRadius));
+        final long duration = (long) ((1 - progress) * ANIMATION_DURATION);
 
-        float initialRadius = (float) Math.hypot(dx, dy);
-
-        float finalRadius = (float) (fAB.getWidth() / 2.0);
-
-        initialRadius = initialRadius +
-                (finalRadius - initialRadius) * (ANIMATION_DURATION -time) / ANIMATION_DURATION;
-
-        final SupportAnimator animator =
-                createCircularReveal(mainView, cx, cy, initialRadius, finalRadius);
-
-        animator.setDuration(time);
+        animator.setDuration(duration);
 
         final long startTime = System.currentTimeMillis();
 
@@ -206,6 +153,10 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
 
             @Override
             public void onAnimationStart() {
+
+                if (direction == ANIMATION_GROW)
+                    mainView.setVisibility(View.VISIBLE);
+
                 if (Build.VERSION.SDK_INT >= 21)
                     fAB.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -219,17 +170,44 @@ implements LoaderManager.LoaderCallbacks<Cursor>{
 
             @Override
             public void onAnimationEnd() {
-                if (!wasCancelled) {
-                    mainView.setVisibility(View.INVISIBLE);
-                    finish();
+                if (!wasCancelled){
+
+                    if (direction == ANIMATION_GROW)
+                        fAB.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                revealAnimation(
+                                        mainView, fAB, ANIMATION_SHRINK,
+                                        centerX, centerY, initialRadius, finalRadius, finalRadius
+                                );
+                            }
+                        });
+
+                    else {
+                        mainView.setVisibility(View.INVISIBLE);
+                        finish();
+                    }
                 }
             }
 
             @Override
             public void onAnimationCancel() {
                 wasCancelled = true;
-                revealAnimation(
-                        mainView, fAB, (int) (System.currentTimeMillis() - startTime));
+
+                int newDirection;
+
+                if (direction == ANIMATION_GROW)
+                    newDirection = ANIMATION_SHRINK;
+                else
+                    newDirection = ANIMATION_GROW;
+
+                double progress = (double)(System.currentTimeMillis() - startTime) / duration;
+
+                revealAnimation(mainView, fAB, newDirection,
+                        centerX, centerY,
+                        initialRadius, finalRadius,
+                        (float) (progress * (endRadius - currentRadius) + currentRadius));
+
             }
 
             @Override
