@@ -8,4 +8,5 @@
     <color name="status_neutral">#96DDFF</color>
     <color name="status_bad">#9862DB</color>
     <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
 </resources>

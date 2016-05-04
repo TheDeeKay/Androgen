@@ -2,12 +2,11 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_root_view"
     android:padding="@dimen/widget_padding"
     android:layout_margin="@dimen/widget_margin"
-    android:alpha="0.5"
-    android:background="#000000">
+    android:alpha="0.9"
+    android:background="@color/black">
 
 
     <LinearLayout
@@ -15,24 +14,24 @@
         android:layout_height="match_parent"
         android:orientation="horizontal">
 
-        <View
-            android:layout_width="10dp"
+        <ImageView
+            android:layout_width="3dp"
             android:layout_height="match_parent"
             android:layout_margin="15dp"
-            android:id="@+id/widget_color_ribbon"
-            android:background="@color/status_good"
-            />
+            android:background="@color/status_good"/>
 
         <RelativeLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:gravity="center">
 
             <TextView
                 android:id="@+id/widget_status_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/white"
+                android:textSize="16dp"
                 android:text="Fantasticno buraz"
                 />
 
@@ -40,19 +39,21 @@
                 android:id="@+id/widget_plant_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignBottom="@id/widget_status_text"
+                android:layout_below="@id/widget_status_text"
                 android:textColor="@color/white"
-                android:alpha="0.5"/>
+                android:text="Ambrozija"
+                android:layout_marginRight="20dp"
+                android:alpha="0.6"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignRight="@id/widget_plant_name"
-                android:layout_alignEnd="@id/widget_plant_name"
-                android:layout_alignBottom="@id/widget_status_text"
+                android:layout_toRightOf="@id/widget_plant_name"
+                android:layout_below="@id/widget_status_text"
                 android:id="@+id/widget_update_time"
                 android:textColor="@color/white"
-                android:alpha="0.5"/>
+                android:text="9:12"
+                android:alpha="0.6"/>
 
         </RelativeLayout>
 
@@ -60,22 +61,30 @@
 
     <TextView
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:alpha="0.3"
+        android:text="15%"
+        android:textSize="110sp"
+        android:textScaleX="1.35"
+        android:padding="0dp"
+        android:layout_marginTop="-21dp"
+        android:includeFontPadding="false"
+        android:alpha="0.1"
         android:textColor="@color/white"
+        android:layout_alignParentTop="true"
         />
 
     <ImageButton
         android:id="@+id/widget_refresh_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
         android:src="@drawable/widget_refresh_image"
         android:background="@android:color/transparent"
+        android:scaleType="centerCrop"
         />
 
 </RelativeLayout>
