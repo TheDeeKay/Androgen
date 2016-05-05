@@ -69,7 +69,18 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
+
         showFetchToast("Ažuriranje...");
+
+        Context context = weakContext.get();
+
+        if (context != null) {
+            Intent intent = new Intent(context, WidgetProvider.class);
+            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            intent.putExtra(WidgetProvider.FETCH_DATA_EXTRA, WidgetProvider.FETCH_STARTED);
+
+            context.sendBroadcast(intent);
+        }
     }
 
     /*
