@@ -1,15 +1,18 @@
 package com.example.aleksa.androgen.asyncTask;
 
+import android.appwidget.AppWidgetManager;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.aleksa.androgen.MainActivity;
 import com.example.aleksa.androgen.R;
+import com.example.aleksa.androgen.WidgetProvider;
 import com.example.aleksa.androgen.data.PolenContract.PolenEntry;
 
 import org.json.JSONArray;
@@ -37,7 +40,9 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
     private final String POLEN_BASE_URL;
     private final String RESOURCE_POLEN;
 
-    WeakReference<MainActivity> mainActivity;
+    private static Toast toast = null;
+
+    private static WeakReference<Context> weakContext;
 
     private static FetchPolenTask instance;
 
@@ -45,6 +50,8 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
 
         if (instance == null)
             instance = new FetchPolenTask(context);
+
+        weakContext = new WeakReference<Context>(context);
 
         return instance;
     }
@@ -55,13 +62,19 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
         POLEN_BASE_URL = context.getString(R.string.data_sepa_gov);
         RESOURCE_POLEN = context.getString(R.string.polen_json_id);
 
-        mainActivity = new WeakReference<MainActivity>((MainActivity) context);
+        weakContext = new WeakReference<>(context);
 
     }
 
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+        showFetchToast("Ažuriranje...");
+    }
+
     /*
-    Takes a pollen data JSON, parses it and inserts it into the table
-     */
+            Takes a pollen data JSON, parses it and inserts it into the table
+             */
     private void getDataFromJSON(String polenJsonStr)
         throws JSONException{
 
@@ -256,9 +269,49 @@ public class FetchPolenTask extends AsyncTask<Void, Void, Void>{
 
     @Override
     protected void onPostExecute(Void aVoid) {
+
         instance = null;
-        if (mainActivity.get() != null)
-            Toast.makeText(mainActivity.get(), "Ažuriranje završeno.", Toast.LENGTH_SHORT).show();
+
+        Context context = weakContext.get();
+
+        if (context != null){
+
+            showFetchToast("Ažuriranje završeno.");
+
+            Intent intent = new Intent(context, WidgetProvider.class);
+            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            intent.putExtra(WidgetProvider.FETCH_COMPLETE_EXTRA,0);
+
+            context.sendBroadcast(intent);
+        }
+
+
         super.onPostExecute(aVoid);
+    }
+
+    private void showFetchToast(String message){
+        if (weakContext.get() != null)
+            showFetchToast(weakContext.get(), message);
+    }
+
+    private static void showFetchToast(Context context, String message){
+
+        if (toast != null)
+            toast.cancel();
+
+        boolean condition = Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB;
+
+        if ((toast == null && condition) || !condition)
+            toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
+
+        if ((toast != null && condition))
+            toast.setText(message);
+
+        toast.show();
+    }
+
+    public static void alreadyRunningToast(Context context){
+        if (instance != null)
+            showFetchToast(context, "Ažuriranje je već u toku.");
     }
 }

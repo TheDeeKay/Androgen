@@ -7,68 +7,136 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.widget.RemoteViews;
 
+import com.example.aleksa.androgen.asyncTask.FetchPolenTask;
 import com.example.aleksa.androgen.data.PolenContract;
 
 public class WidgetProvider extends AppWidgetProvider {
 
+    private static final String FETCH_DATA_EXTRA = "fetchData";
+
+    public static final String FETCH_COMPLETE_EXTRA = "fetchComplete";
+
+    private static final int FETCH_AND_UPDATE = 0;
+    private static final int UPDATE = 1;
+
+    private static final int STANDARD_REFRESH_IMAGE = 100;
+    private static final int CURRENTLY_REFRESHING_IMAGE = 101;
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+
+        if (intent.getExtras() != null &&
+                intent.getExtras().getInt(FETCH_DATA_EXTRA, UPDATE) == FETCH_AND_UPDATE){
+
+            if (FetchPolenTask.getInstance(context).getStatus() != AsyncTask.Status.RUNNING) {
+
+                FetchPolenTask.getInstance(context).execute();
+
+                setRefreshButtonImage(context, CURRENTLY_REFRESHING_IMAGE);
+            } else {
+                FetchPolenTask.alreadyRunningToast(context);
+            }
+
+        }
+        else {
+
+            if (intent.getExtras() != null && intent.hasExtra(FETCH_COMPLETE_EXTRA)){
+
+                setRefreshButtonImage(context, STANDARD_REFRESH_IMAGE);
+            }
+
+            super.onReceive(context, intent);
+        }
+    }
+
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 
-        Uri queryUri = PolenContract.PolenEntry.buildPolenLocationPlant(
-                String.valueOf(Utilities.getPreferredLocation(context)), String.valueOf(0));
+        final int length = appWidgetIds.length;
 
-        Cursor queryResults = context.getContentResolver().query(
-                queryUri,
-                null,
-                null, null,
-                null
-        );
+        for (int i = 0; i < length; i++) {
 
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+            // TODO determine the widget plant
+            Uri queryUri = PolenContract.PolenEntry.buildPolenLocationPlant(
+                    String.valueOf(Utilities.getPreferredLocation(context)), String.valueOf(0));
 
-        Intent intent = new Intent(context, WidgetProvider.class);
-        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetIds[0]);
-        PendingIntent pending = PendingIntent.getBroadcast(
-                context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            Cursor queryResults = context.getContentResolver().query(
+                    queryUri,
+                    null,
+                    null, null,
+                    null
+            );
 
-        views.setOnClickPendingIntent(R.id.widget_refresh_button, pending);
+            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
 
-        if (queryResults.moveToFirst()) {
+            Intent intent = new Intent(context, WidgetProvider.class);
+            intent.putExtra(FETCH_DATA_EXTRA, FETCH_AND_UPDATE);
+            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            PendingIntent pending = PendingIntent.getBroadcast(
+                    context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-            int concentration = queryResults.getInt(
-                    queryResults.getColumnIndex(PolenContract.PolenEntry.COLUMN_CONCENTRATION));
+            views.setOnClickPendingIntent(R.id.widget_refresh_button, pending);
 
-            String text;
+            if (queryResults.moveToFirst()) {
 
-            switch (concentration){
-                case 0: {
-                    text = "Havarija";
-                    break;
+                int concentration = queryResults.getInt(
+                        queryResults.getColumnIndex(PolenContract.PolenEntry.COLUMN_CONCENTRATION));
+
+                String text;
+
+                switch (concentration) {
+                    case 0: {
+                        text = "Havarija";
+                        break;
+                    }
+                    case 1: {
+                        text = "Bleh";
+                        break;
+                    }
+                    case 2: {
+                        text = "Bogme...";
+                        break;
+                    }
+                    case 3: {
+                        text = "Haos";
+                        break;
+                    }
+
+                    default:
+                        text = "Nema gi";
                 }
-                case 1: {
-                    text = "Bleh";
-                    break;
-                }
-                case 2: {
-                    text = "Bogme...";
-                    break;
-                }
-                case 3: {
-                    text = "Haos";
-                    break;
-                }
 
-                default: text = "Nema gi";
+                views.setTextViewText(R.id.widget_status_text, text);
             }
 
-            views.setTextViewText(R.id.widget_status_text, text);
+            queryResults.close();
+
+            appWidgetManager.updateAppWidget(appWidgetIds[i], views);
         }
+    }
 
-        queryResults.close();
+    private void setRefreshButtonImage(Context context, int image){
 
-        appWidgetManager.updateAppWidget(appWidgetIds[0], views);
+        RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+
+        switch (image) {
+
+
+            case STANDARD_REFRESH_IMAGE: {
+
+                remoteViews.setImageViewResource(
+                        R.id.widget_refresh_button,R.drawable.widget_refresh_image);
+                break;
+            }
+
+
+            case CURRENTLY_REFRESHING_IMAGE: {
+                remoteViews.setImageViewResource(
+                        R.id.widget_refresh_button, R.drawable.widget_refreshing);
+            }
+        }
     }
 }

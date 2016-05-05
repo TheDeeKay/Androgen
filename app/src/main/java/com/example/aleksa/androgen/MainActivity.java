@@ -8,7 +8,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.support.design.widget.FloatingActionButton;
@@ -209,31 +208,20 @@ public class MainActivity extends AppCompatActivity
 
             if (!(fetchPolenTask.getStatus() == AsyncTask.Status.RUNNING)) {
                 fetchPolenTask.execute();
-                showFetchToast("Ažuriranje...");
             }
             else
-                showFetchToast("Ažuriranje je već u toku.");
+                FetchPolenTask.getInstance(this).alreadyRunningToast(this);
 
         }
         else
-            showFetchToast("Nema internet konekcije, ažuriranje neuspelo.");
+            Toast.makeText(
+                    this, "Nema internet konekcije, ažuriranje neuspelo.", Toast.LENGTH_SHORT)
+                    .show();
 
         if (Utilities.isFirstLaunch(this)) {
             FetchCsvTask fetchCsvTask = FetchCsvTask.getInstance(this);
             fetchCsvTask.execute();
         }
-    }
-
-    private void showFetchToast(String message){
-        if (toast != null)
-            toast.cancel();
-
-        boolean condition = Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB;
-        if ((toast == null && condition) || !condition)
-            toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
-        if ((toast != null && condition))
-            toast.setText(message);
-        toast.show();
     }
 
     private void registerLocationPreferencesListener(){
